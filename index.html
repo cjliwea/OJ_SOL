@@ -2,196 +2,117 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ACcsp的算法实验室</title>
+    <title>ACcsp算法实验室 - NOI 2025 版</title>
     <style>
-        :root {
-            --bg: #050a0f;
-            --j-color: #00ffcc;
-            --s-color: #ff3399;
-            --j-bg: rgba(0, 255, 204, 0.1);
-            --s-bg: rgba(255, 51, 153, 0.1);
-        }
+        :root { --bg: #050a0f; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg); font-family: 'Consolas', 'PingFang SC', sans-serif; overflow: hidden; color: #fff; }
+        header { position: absolute; top: 20px; left: 20px; z-index: 100; pointer-events: none; }
+        h1 { margin: 0; font-size: 32px; background: linear-gradient(to right, #ff4d4d, #00a2ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .tag { position: absolute; padding: 8px 18px; border-radius: 50px; cursor: pointer; white-space: nowrap; font-weight: bold; font-size: 13px; transition: transform 0.2s, box-shadow 0.2s; border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(4px); user-select: none; }
+        .tag:hover { transform: scale(1.3) !important; z-index: 1000 !important; box-shadow: 0 0 30px currentColor; background: rgba(255,255,255,0.1); }
+        
+        /* 难度配色 */
+        .diff-1-2 { color: #ff4d4d; border-color: #ff4d4d80; background: #ff4d4d1a; }
+        .diff-3-4 { color: #ffa500; border-color: #ffa50080; background: #ffa5001a; }
+        .diff-5-6 { color: #ffff00; border-color: #ffff0080; background: #ffff001a; }
+        .diff-7   { color: #00ff00; border-color: #00ff0080; background: #00ff001a; }
+        .diff-8   { color: #00a2ff; border-color: #00a2ff80; background: #00a2ff1a; }
 
-        body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            background: var(--bg);
-            font-family: 'Consolas', 'PingFang SC', sans-serif;
-            overflow: hidden;
-            color: #fff;
-        }
-
-        /* 顶部标题栏 */
-        header {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            z-index: 100;
-            pointer-events: none;
-        }
-
-        h1 { margin: 0; font-size: 28px; background: linear-gradient(to right, #00ffcc, #ff3399); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        p { margin: 5px 0; font-size: 12px; color: #555; }
-
-        /* 标签容器 */
-        #container {
-            width: 100vw;
-            height: 100vh;
-            position: relative;
-        }
-
-        /* 算法标签样式 */
-        .algo-tag {
-            position: absolute;
-            padding: 10px 20px;
-            border-radius: 50px;
-            cursor: pointer;
-            white-space: nowrap;
-            user-select: none;
-            font-weight: bold;
-            font-size: 14px;
-            transition: transform 0.2s, box-shadow 0.2s;
-            border: 1px solid transparent;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(5px);
-        }
-
-        /* J组颜色 */
-        .tag-j {
-            color: var(--j-color);
-            background: var(--j-bg);
-            border-color: rgba(0, 255, 204, 0.3);
-            box-shadow: 0 0 15px rgba(0, 255, 204, 0.1);
-        }
-
-        /* S组颜色 */
-        .tag-s {
-            color: var(--s-color);
-            background: var(--s-bg);
-            border-color: rgba(255, 51, 153, 0.3);
-            box-shadow: 0 0 15px rgba(255, 51, 153, 0.1);
-        }
-
-        .algo-tag:hover {
-            transform: scale(1.2);
-            z-index: 999 !important;
-            box-shadow: 0 0 25px currentColor;
-            background: rgba(255, 255, 255, 0.15);
-        }
-
-        /* 说明文字 */
-        .legend {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            font-size: 12px;
-            color: #444;
-        }
+        .legend { position: absolute; bottom: 20px; left: 20px; font-size: 11px; display: flex; flex-direction: column; gap: 8px; background: rgba(0,0,0,0.6); padding: 15px; border-radius: 8px; border: 1px solid #333; pointer-events: none; }
+        .lg-i { display: flex; align-items: center; gap: 8px; }
     </style>
 </head>
 <body>
 
 <header>
     <h1>ACcsp算法实验室</h1>
-    <p>ACcsp OJ 官方可视化空间 · 犇犇的成长笔记</p>
+    <div style="color: #888; font-size: 14px; margin-top: 5px;">基于 2025 NOI 大纲 · 全量算法空间</div>
 </header>
 
-<div id="container"></div>
+<div id="box" style="width: 100vw; height: 100vh;"></div>
 
 <div class="legend">
-    <span style="color: var(--j-color)">●</span> CSP-J 普及组 &nbsp;
-    <span style="color: var(--s-color)">●</span> CSP-S 提高组
+    <div class="lg-i"><span style="color:#ff4d4d">●</span> 难度 1-2 (入门基础语法/组合数学)</div>
+    <div class="lg-i"><span style="color:#ffa500">●</span> 难度 3-4 (普及核心贪心/搜索)</div>
+    <div class="lg-i"><span style="color:#ffff00">●</span> 难度 5-6 (提高基础DP/简单图论)</div>
+    <div class="lg-i"><span style="color:#00ff00">●</span> 难度 7 (提高核心树形DP/高级图论)</div>
+    <div class="lg-i"><span style="color:#00a2ff">●</span> 难度 8 (省选/NOI网络流/组合数学高级)</div>
 </div>
 
 <script>
-    const algorithms = [
-        { name: "BFS 广搜", type: "j" },
-        { name: "DFS 深搜", type: "j" },
-        { name: "快速排序", type: "j" },
-        { name: "区间 DP", type: "s" },
-        { name: "状态压缩 DP", type: "s" },
-        { name: "贪心算法", type: "j" },
-        { name: "Dijkstra", type: "j" },
-        { name: "线段树", type: "s" },
-        { name: "Tarjan 强连通", type: "s" },
-        { name: "倍增 LCA", type: "s" },
-        { name: "欧拉路径", type: "j" },
-        { name: "单调队列", type: "j" },
-        { name: "网络流", type: "s" },
-        { name: "二分图匹配", type: "s" },
-        { name: "拓扑排序", type: "j" },
-        { name: "博弈论", type: "s" },
-        { name: "数学基础", type: "j" }
+    // 基于 2025 大纲提取的全量代表性算法标签
+    const algos = [
+        // 难度 1-2
+        { n: "C++语法基础", d: 1 }, { n: "控制结构", d: 1 }, { n: "函数与递归", d: 2 }, { n: "简单数组", d: 2 },
+        { n: "整数最大公约数", d: 2 }, { n: "菲波那契数列", d: 2 }, { n: "简单逻辑与集合", d: 2 },
+        // 难度 3-4
+        { n: "冒泡/插入排序", d: 3 }, { n: "贪心算法基础", d: 3 }, { n: "排列组合基础", d: 4 }, { n: "二分查找", d: 4 },
+        { n: "哈希表", d: 4 }, { n: "栈与队列", d: 4 }, { n: "简单模拟", d: 3 }, { n: "网格图BFS", d: 4 },
+        // 难度 5-6
+        { n: "线性DP", d: 5 }, { n: "背包问题", d: 5 }, { n: "并查集", d: 5 }, { n: "Dijkstra最短路", d: 5 },
+        { n: "Kruskal最小生成树", d: 6 }, { n: "树状数组", d: 6 }, { n: "线段树", d: 6 }, { n: "拓扑排序", d: 6 },
+        { n: "简单数论 (质数/模算)", d: 5 }, { n: "二叉搜索树", d: 6 }, { n: "分治算法", d: 5 },
+        // 难度 7
+        { n: "区间DP", d: 7 }, { n: "树形DP", d: 7 }, { n: "状态压缩DP", d: 7 }, { n: "网络流基础", d: 7 },
+        { n: "Tarjan强连通", d: 7 }, { n: "倍增LCA", d: 7 }, { n: "ST表 (RMQ)", d: 7 }, { n: "组合数学进阶", d: 7 },
+        { n: "矩阵乘法", d: 7 }, { n: "欧拉路径与回路", d: 7 }, { n: "动态数论 (CRT/逆元)", d: 7 },
+        // 难度 8
+        { n: "最大流与最小割", d: 8 }, { n: "费用流算法", d: 8 }, { n: "CDQ分治", d: 8 }, { n: "莫队算法", d: 8 },
+        { n: "FFT快速傅里叶", d: 8 }, { n: "动态树 (LCT)", d: 8 }, { n: "平衡树 (Splay/Treap)", d: 8 }, { n: "生成函数", d: 8 },
+        { n: "后缀自动机/数", d: 8 }, { n: "莫比乌斯反演", d: 8 }, { n: "博弈论", d: 8 }, { n: "离线算法", d: 8 }
     ];
 
-    const container = document.getElementById('container');
-    const tags = [];
+    const box = document.getElementById('box');
+    const items = [];
 
-    class Tag {
+    class Label {
         constructor(info) {
-            this.element = document.createElement('div');
-            this.element.className = `algo-tag tag-${info.type}`;
-            this.element.innerText = info.name;
-            container.appendChild(this.element);
+            const el = document.createElement('div');
+            const cls = info.d <= 2 ? '1-2' : info.d <= 4 ? '3-4' : info.d <= 6 ? '5-6' : info.d === 7 ? '7' : '8';
+            el.className = `tag diff-${cls}`;
+            el.innerText = info.n;
+            box.appendChild(el);
 
-            // 随机初始位置
-            this.w = this.element.offsetWidth;
-            this.h = this.element.offsetHeight;
+            this.el = el;
+            this.w = el.offsetWidth;
+            this.h = el.offsetHeight;
             this.x = Math.random() * (window.innerWidth - this.w);
             this.y = Math.random() * (window.innerHeight - this.h);
-            
-            // 随机初速度
-            this.vx = (Math.random() - 0.5) * 1.5;
-            this.vy = (Math.random() - 0.5) * 1.5;
+            this.vx = (Math.random() - 0.5) * 1.1; // 速度稍微降低一点
+            this.vy = (Math.random() - 0.5) * 1.1;
+            this.stop = false;
 
-            this.hovered = false;
-            this.element.onmouseenter = () => this.hovered = true;
-            this.element.onmouseleave = () => this.hovered = false;
-            this.element.onclick = () => alert(`跳转到 ${info.name} 的可视化演示...`);
+            el.onmouseenter = () => this.stop = true;
+            el.onmouseleave = () => this.stop = false;
         }
 
-        update() {
-            if (!this.hovered) {
-                this.x += this.vx;
-                this.y += this.vy;
-
-                // 碰到左右边缘反弹
-                if (this.x <= 0 || this.x + this.w >= window.innerWidth) {
-                    this.vx *= -1;
-                }
-                // 碰到上下边缘反弹
-                if (this.y <= 0 || this.y + this.h >= window.innerHeight) {
-                    this.vy *= -1;
-                }
+        move() {
+            if (!this.stop) {
+                this.x += this.vx; this.y += this.vy;
+                if (this.x <= 0 || this.x + this.w >= window.innerWidth) this.vx *= -1;
+                if (this.y <= 0 || this.y + this.h >= window.innerHeight) this.vy *= -1;
             }
-            this.element.style.transform = `translate(${this.x}px, ${this.y}px) ${this.hovered ? 'scale(1.2)' : 'scale(1)'}`;
+            this.el.style.transform = `translate(${this.x}px, ${this.y}px)`;
         }
     }
 
-    // 初始化标签
-    function init() {
-        algorithms.forEach(item => {
-            tags.push(new Tag(item));
-        });
-        animate();
+    function run() {
+        algos.forEach(a => items.push(new Label(a)));
+        const frame = () => {
+            items.forEach(i => i.move());
+            requestAnimationFrame(frame);
+        };
+        frame();
     }
 
-    function animate() {
-        tags.forEach(t => t.update());
-        requestAnimationFrame(animate);
-    }
-
-    // 窗口大小变化时重置
     window.onresize = () => {
-        tags.forEach(t => {
-            t.x = Math.min(t.x, window.innerWidth - t.w);
-            t.y = Math.min(t.y, window.innerHeight - t.h);
+        items.forEach(i => {
+            i.x = Math.min(i.x, window.innerWidth - i.w);
+            i.y = Math.min(i.y, window.innerHeight - i.h);
         });
     };
 
-    init();
+    run();
 </script>
 
 </body>
