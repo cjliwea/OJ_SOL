@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>BFS 深度可视化教学 - 犇犇寻师记</title>
+    <style>
+        :root { --bg: #1e1e1e; --panel: #2d2d2d; --text: #d4d4d4; --accent: #007acc; --highlight: rgba(255, 255, 0, 0.25); }
+        body { font-family: 'Consolas', 'Courier New', monospace; background: var(--bg); color: var(--text); margin: 0; padding: 20px; overflow: hidden; }
+        .layout { display: flex; gap: 15px; height: 92vh; }
+        .panel { background: var(--panel); border-radius: 8px; padding: 15px; display: flex; flex-direction: column; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+        
+        /* 左侧：输入 */
+        .left { flex: 0.8; min-width: 200px; }
+        textarea { width: 100%; flex-grow: 1; background: #121212; color: #9cdcfe; border: 1px solid #444; padding: 10px; font-size: 14px; border-radius: 4px; line-height: 1.4; }
+        
+        /* 中间：网格可视化 */
+        .center { flex: 1.5; align-items: center; }
+        .grid-container { position: relative; padding: 10px; background: #121212; border-radius: 8px; margin: 15px 0; }
+        .grid { display: grid; gap: 4px; }
+        .cell { width: 45px; height: 45px; background: #333; display: flex; align-items: center; justify-content: center; font-size: 12px; transition: 0.2s; border-radius: 2px; }
+        
+        /* 状态颜色 */
+        .cell.wall { background: #555; color: #888; }
+        .cell.start { background: #e67e22 !important; color: white; font-weight: bold; border-radius: 50%; }
+        .cell.target { background: #27ae60 !important; color: white; border: 2px solid #fff; }
+        .cell.visited { background: #2980b9; color: white; }
+        .cell.probing { background: #f1c40f; color: #000; transform: scale(1.1); z-index: 5; box-shadow: 0 0 10px #f1c40f; }
+        .cell.invalid { background: #c0392b; color: white; transform: scale(0.9); }
+        .cell.in-queue { border: 2px solid #8e44ad; background: #34495e; }
+        .cell.current-node { outline: 3px solid #f1c40f; outline-offset: 2px; z-index: 6; }
+
+        .status-msg { width: 100%; padding: 12px; background: #000; border-radius: 4px; font-size: 14px; color: #4ec9b0; border-left: 4px solid var(--accent); min-height: 40px; }
+
+        /* 右侧：代码 */
+        .right { flex: 1.5; overflow-y: auto; background: #1e1e1e; border: 1px solid #333; }
+        .code-line { display: block; padding: 2px 15px; border-left: 4px solid transparent; color: #abb2bf; font-size: 13px; white-space: pre; }
+        .code-line.active { background: var(--highlight); border-left-color: #f1c40f; color: #fff; font-weight: bold; }
+        .keyword { color: #c678dd; }
+        .func { color: #61afef; }
+        .comment { color: #5c6370; font-style: italic; }
+
+        .btn-group { display: flex; gap: 8px; margin-top: 10px; }
+        button { flex: 1; padding: 10px; cursor: pointer; background: var(--accent); color: white; border: none; border-radius: 4px; font-weight: bold; }
+        button:hover { background: #005a9e; }
+        .queue-box { margin-top: 15px; font-size: 12px; color: #dcdcaa; background: #252526; padding: 8px; border-radius: 4px; border: 1px solid #333; }
+    </style>
+</head>
+<body>
+
+<div class="layout">
+    <div class="panel left">
+        <h3 style="margin:0 0 10px 0; font-size: 16px;">📥 样例编辑</h3>
+        <textarea id="mapInput">3
+001
+101
+100
+1 1 3 3</textarea>
+        <div class="btn-group">
+            <button onclick="initBFS()">重置算法</button>
+        </div>
+        <div style="font-size: 11px; color: #777; margin-top: 10px;">
+            第一行 $n$，之后 $n$ 行地图，最后一行 $x_1, y_1, x_2, y_2$。
+        </div>
+    </div>
+
+    <div class="panel center">
+        <h3 style="margin:0 0 10px 0; font-size: 16px;">🚀 BFS 探测过程</h3>
+        <div class="grid-container">
+            <div id="grid" class="grid"></div>
+        </div>
+        <div class="status-msg" id="status">点击“单步执行”查看寻路逻辑</div>
+        <div class="btn-group" style="width: 100%;">
+            <button onclick="step()" style="background: #d35400;">单步执行 (Step Over)</button>
+        </div>
+        <div class="queue-box">
+            <strong>队列 (Queue):</strong> <span id="queueDisplay">[]</span>
+        </div>
+    </div>
+
+    <div class="panel right">
+        <h3 style="margin:0 0 10px 0; font-size: 16px;">💻 C++ 代码同步</h3>
+        <div id="codeArea"></div>
+    </div>
+</div>
+
+<script>
+    const codeData = [
+        { id: 0, text: 'while (!q.empty()) {', type: 'keyword' },
+        { id: 1, text: '    node cur = q.front(); q.pop();', type: '' },
+        { id: 2, text: '    if (cur.x == tx && cur.y == ty) {', type: '' },
+        { id: 3, text: '        cout << d[tx][ty]; return 0; }', type: '' },
+        { id: 4, text: '    for (int i = 0; i < 4; i++) {', type: 'keyword' },
+        { id: 5, text: '        int nx = cur.x + dx[i], ny = cur.y + dy[i];', type: '' },
+        { id: 6, text: '        // 检查试探坐标是否合法', type: 'comment' },
+        { id: 7, text: '        if (isValid(nx, ny) && d[nx][ny] == -1) {', type: 'keyword' },
+        { id: 8, text: '            d[nx][ny] = d[cur.x][cur.y] + 1;', type: '' },
+        { id: 9, text: '            q.push({nx, ny});', type: '' },
+        { id: 10, text: '        }', type: '' },
+        { id: 11, text: '    }', type: '' },
+        { id: 12, text: '}', type: '' }
+    ];
+
+    let state = {
+        n: 0, map: [], sx: 0, sy: 0, tx: 0, ty: 0,
+        queue: [], visited: [], dists: [],
+        pc: 0, // Program Counter
+        cur: null, 
+        dir: 0,
+        nx: -1, ny: -1,
+        finished: false
+    };
+
+    function initBFS() {
+        const raw = document.getElementById('mapInput').value.trim().split('\n');
+        state.n = parseInt(raw[0]);
+        state.map = raw.slice(1, state.n+1).map(s => s.split(''));
+        const coord = raw[state.n+1].split(/\s+/).map(Number);
+        state.sx = coord[0]-1; state.sy = coord[1]-1;
+        state.tx = coord[2]-1; state.ty = coord[3]-1;
+
+        state.queue = [{x: state.sx, y: state.sy}];
+        state.dists = Array.from({length: state.n}, () => Array(state.n).fill(-1));
+        state.dists[state.sx][state.sy] = 0;
+        state.pc = 0;
+        state.cur = null;
+        state.dir = 0;
+        state.finished = false;
+        
+        renderGrid();
+        renderCode();
+        updateUI("初始化完成，起点已入队。");
+    }
+
+    function renderCode() {
+        const area = document.getElementById('codeArea');
+        area.innerHTML = codeData.map(l => `<span id="code-${l.id}" class="code-line">${l.text}</span>`).join('');
+    }
+
+    function renderGrid() {
+        const g = document.getElementById('grid');
+        g.style.gridTemplateColumns = `repeat(${state.n}, 45px)`;
+        g.innerHTML = '';
+        for(let i=0; i<state.n; i++){
+            for(let j=0; j<state.n; j++){
+                const div = document.createElement('div');
+                div.id = `cell-${i}-${j}`;
+                div.className = 'cell';
+                if(state.map[i][j] === '1') div.classList.add('wall');
+                if(state.dists[i][j] !== -1) {
+                    div.classList.add('visited');
+                    div.innerText = state.dists[i][j];
+                }
+                if(i === state.sx && j === state.sy) div.classList.add('start');
+                if(i === state.tx && j === state.ty) div.classList.add('target');
+                
+                // 探测状态叠加
+                if(i === state.nx && j === state.ny) {
+                    if(state.pc === 7) div.classList.add('probing');
+                }
+                if(state.cur && i === state.cur.x && j === state.cur.y) div.classList.add('current-node');
+                
+                g.appendChild(div);
+            }
+        }
+    }
+
+    function updateUI(msg) {
+        document.getElementById('status').innerText = msg;
+        document.getElementById('queueDisplay').innerText = JSON.stringify(state.queue.map(p=>`(${p.x+1},${p.y+1})`));
+        document.querySelectorAll('.code-line').forEach(el => el.classList.remove('active'));
+        const activeLine = document.getElementById(`code-${state.pc}`);
+        if(activeLine) activeLine.classList.add('active');
+    }
+
+    function step() {
+        if(state.finished) return;
+
+        switch(state.pc) {
+            case 0: // while
+                if(state.queue.length > 0) { state.pc = 1; updateUI("检查队列：不为空，继续。"); }
+                else { state.pc = 12; state.finished = true; updateUI("队列已空，搜索结束。"); }
+                break;
+            case 1: // pop
+                state.cur = state.queue.shift();
+                state.pc = 2;
+                updateUI(`出队节点 (${state.cur.x+1}, ${state.cur.y+1})，开始向四周扩展。`);
+                break;
+            case 2: // check target
+                if(state.cur.x === state.tx && state.cur.y === state.ty) state.pc = 3;
+                else { state.dir = 0; state.pc = 4; updateUI("尚未到达终点，继续扩展。"); }
+                break;
+            case 3: // return
+                state.finished = true;
+                updateUI(`成功找到终点！最短距离: ${state.dists[state.tx][state.ty]}`);
+                break;
+            case 4: // for loop
+                if(state.dir < 4) state.pc = 5;
+                else { state.pc = 0; state.cur = null; state.nx = -1; state.ny = -1; updateUI("该节点四个方向探测完毕。"); }
+                break;
+            case 5: // calc nx, ny
+                const dx = [0, 0, 1, -1], dy = [1, -1, 0, 0];
+                state.nx = state.cur.x + dx[state.dir];
+                state.ny = state.cur.y + dy[state.dir];
+                state.pc = 7; // 跳过注释行
+                updateUI(`试探方向 ${state.dir}: 目标坐标 (${state.nx+1}, ${state.ny+1})`);
+                break;
+            case 7: // if isValid
+                const isValid = state.nx >= 0 && state.nx < state.n && state.ny >= 0 && state.ny < state.n && 
+                                state.map[state.nx][state.ny] === '0' && state.dists[state.nx][state.ny] === -1;
+                
+                const cell = document.getElementById(`cell-${state.nx}-${state.ny}`);
+                if(isValid) {
+                    state.pc = 8;
+                    updateUI(`坐标 (${state.nx+1}, ${state.ny+1}) 合法且未访问。`);
+                } else {
+                    if(cell) cell.classList.add('invalid');
+                    state.dir++;
+                    state.pc = 4;
+                    updateUI(`坐标无效或已访问/是墙，跳过。`);
+                    setTimeout(() => renderGrid(), 300); // 红色闪一下消失
+                }
+                break;
+            case 8: // set dist
+                state.dists[state.nx][state.ny] = state.dists[state.cur.x][state.cur.y] + 1;
+                state.pc = 9;
+                updateUI(`更新距离：d[${state.nx+1}][${state.ny+1}] = ${state.dists[state.nx][state.ny]}`);
+                break;
+            case 9: // push
+                state.queue.push({x: state.nx, y: state.ny});
+                state.dir++;
+                state.pc = 4;
+                updateUI(`将坐标 (${state.nx+1}, ${state.ny+1}) 放入队列。`);
+                break;
+        }
+        renderGrid();
+        updateUI(document.getElementById('status').innerText);
+    }
+
+    initBFS();
+</script>
+</body>
+</html>
