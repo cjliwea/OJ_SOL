@@ -3,265 +3,194 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>杨老师的算法实验室 - 犇犇与牛老师的竞赛空间</title>
+    <title>杨老师的算法实验室 - 悬浮算法空间</title>
     <style>
         :root {
-            --primary: #00d2ff;
-            --secondary: #3a7bd5;
-            --bg: #0a0e14;
-            --card-bg: rgba(255, 255, 255, 0.05);
-            --text: #e0e0e0;
+            --bg: #050a0f;
+            --j-color: #00ffcc;
+            --s-color: #ff3399;
+            --j-bg: rgba(0, 255, 204, 0.1);
+            --s-bg: rgba(255, 51, 153, 0.1);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Inter', 'PingFang SC', sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            overflow-x: hidden;
-        }
-
-        /* 动态背景画布 */
-        #bg-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-        }
-
-        /* 导航栏 */
-        nav {
-            padding: 20px 50px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            backdrop-filter: blur(10px);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .logo {
-            font-size: 24px;
-            font-weight: 800;
-            background: linear-gradient(45deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        /* Hero 区域 */
-        .hero {
-            height: 60vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            padding: 0 20px;
-        }
-
-        .hero h1 {
-            font-size: 3.5rem;
-            margin-bottom: 20px;
-            letter-spacing: -1px;
-        }
-
-        .hero p {
-            font-size: 1.2rem;
-            color: #888;
-            max-width: 600px;
-            line-height: 1.6;
-        }
-
-        /* 算法网格 */
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            padding: 50px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .card {
-            background: var(--card-bg);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            padding: 30px;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            position: relative;
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            background: var(--bg);
+            font-family: 'Consolas', 'PingFang SC', sans-serif;
             overflow: hidden;
-            text-decoration: none;
-            color: inherit;
+            color: #fff;
         }
 
-        .card:hover {
-            transform: translateY(-10px);
-            background: rgba(255, 255, 255, 0.08);
-            border-color: var(--primary);
-            box-shadow: 0 0 30px rgba(0, 210, 255, 0.2);
-        }
-
-        .card h3 {
-            font-size: 20px;
-            margin-bottom: 15px;
-            color: var(--primary);
-        }
-
-        .card p {
-            font-size: 14px;
-            color: #aaa;
-            line-height: 1.5;
-        }
-
-        .card-tag {
+        /* 顶部标题栏 */
+        header {
             position: absolute;
             top: 20px;
-            right: 20px;
-            font-size: 10px;
-            background: rgba(0, 210, 255, 0.1);
-            color: var(--primary);
-            padding: 4px 8px;
-            border-radius: 4px;
-            text-transform: uppercase;
+            left: 20px;
+            z-index: 100;
+            pointer-events: none;
         }
 
-        /* 底部 */
-        footer {
-            text-align: center;
-            padding: 50px;
-            font-size: 12px;
-            color: #555;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        h1 { margin: 0; font-size: 28px; background: linear-gradient(to right, #00ffcc, #ff3399); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        p { margin: 5px 0; font-size: 12px; color: #555; }
+
+        /* 标签容器 */
+        #container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
         }
 
-        .btn {
-            margin-top: 30px;
-            padding: 12px 30px;
-            background: linear-gradient(45deg, var(--primary), var(--secondary));
-            border: none;
-            border-radius: 8px;
-            color: white;
-            font-weight: bold;
+        /* 算法标签样式 */
+        .algo-tag {
+            position: absolute;
+            padding: 10px 20px;
+            border-radius: 50px;
             cursor: pointer;
-            transition: 0.3s;
+            white-space: nowrap;
+            user-select: none;
+            font-weight: bold;
+            font-size: 14px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
         }
 
-        .btn:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(0, 210, 255, 0.4); }
+        /* J组颜色 */
+        .tag-j {
+            color: var(--j-color);
+            background: var(--j-bg);
+            border-color: rgba(0, 255, 204, 0.3);
+            box-shadow: 0 0 15px rgba(0, 255, 204, 0.1);
+        }
+
+        /* S组颜色 */
+        .tag-s {
+            color: var(--s-color);
+            background: var(--s-bg);
+            border-color: rgba(255, 51, 153, 0.3);
+            box-shadow: 0 0 15px rgba(255, 51, 153, 0.1);
+        }
+
+        .algo-tag:hover {
+            transform: scale(1.2);
+            z-index: 999 !important;
+            box-shadow: 0 0 25px currentColor;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        /* 说明文字 */
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            font-size: 12px;
+            color: #444;
+        }
     </style>
 </head>
 <body>
 
-<canvas id="bg-canvas"></canvas>
+<header>
+    <h1>杨老师算法实验室</h1>
+    <p>ACcsp OJ 官方可视化空间 · 犇犇的成长笔记</p>
+</header>
 
-<nav>
-    <div class="logo">ALGO LAB</div>
-    <div style="font-size: 14px; color: #666;">ACcsp OJ 官方教学站</div>
-</nav>
+<div id="container"></div>
 
-<section class="hero">
-    <h1>犇犇与牛老师的算法空间</h1>
-    <p>专注于青少年信息学竞赛 (C++) 教学，将复杂的动态规划、图论与数据结构转化为直观的可视化体验。</p>
-    <button class="btn" onclick="document.getElementById('algo-list').scrollIntoView({behavior:'smooth'})">开启探索</button>
-</section>
-
-<div class="grid" id="algo-list">
-    <a href="./bfs/index.html" class="card">
-        <div class="card-tag">Search</div>
-        <h3>BFS 广度优先搜索</h3>
-        <p>通过队列实现的一层层向外扩张的搜索算法。最常用于寻找网格图中的最短路径。</p>
-    </a>
-
-    <a href="#" class="card">
-        <div class="card-tag">DP</div>
-        <h3>动态规划 (DP)</h3>
-        <p>从区间 DP 到树形 DP，掌握状态转移方程的艺术。犇犇最头疼但也最强大的武器。</p>
-    </a>
-
-    <a href="#" class="card">
-        <div class="card-tag">Graph</div>
-        <h3>欧拉路径与回路</h3>
-        <p>寻找笔不离纸遍历所有边的方法。牛老师下午竞赛课的重点内容。</p>
-    </a>
-
-    <a href="#" class="card">
-        <div class="card-tag">Structure</div>
-        <h3>单调栈与单调队列</h3>
-        <p>优化 O(n^2) 复杂度的利器。在看似杂乱的数据中维持一份秩序。</p>
-    </a>
+<div class="legend">
+    <span style="color: var(--j-color)">●</span> CSP-J 普及组 &nbsp;
+    <span style="color: var(--s-color)">●</span> CSP-S 提高组
 </div>
 
-<footer>
-    &copy; 2026 杨老师 Algorithm Lab. 基于 Hydro OJ 强力驱动.
-</footer>
-
 <script>
-    const canvas = document.getElementById('bg-canvas');
-    const ctx = canvas.getContext('2d');
-    let pts = [];
+    const algorithms = [
+        { name: "BFS 广搜", type: "j" },
+        { name: "DFS 深搜", type: "j" },
+        { name: "快速排序", type: "j" },
+        { name: "区间 DP", type: "s" },
+        { name: "状态压缩 DP", type: "s" },
+        { name: "贪心算法", type: "j" },
+        { name: "Dijkstra", type: "j" },
+        { name: "线段树", type: "s" },
+        { name: "Tarjan 强连通", type: "s" },
+        { name: "倍增 LCA", type: "s" },
+        { name: "欧拉路径", type: "j" },
+        { name: "单调队列", type: "j" },
+        { name: "网络流", type: "s" },
+        { name: "二分图匹配", type: "s" },
+        { name: "拓扑排序", type: "j" },
+        { name: "博弈论", type: "s" },
+        { name: "数学基础", type: "j" }
+    ];
 
-    function resize() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-    }
+    const container = document.getElementById('container');
+    const tags = [];
 
-    class Particle {
-        constructor() {
-            this.x = Math.random() * canvas.width;
-            this.y = Math.random() * canvas.height;
-            this.vx = (Math.random() - 0.5) * 0.5;
-            this.vy = (Math.random() - 0.5) * 0.5;
-            this.r = Math.random() * 2;
+    class Tag {
+        constructor(info) {
+            this.element = document.createElement('div');
+            this.element.className = `algo-tag tag-${info.type}`;
+            this.element.innerText = info.name;
+            container.appendChild(this.element);
+
+            // 随机初始位置
+            this.w = this.element.offsetWidth;
+            this.h = this.element.offsetHeight;
+            this.x = Math.random() * (window.innerWidth - this.w);
+            this.y = Math.random() * (window.innerHeight - this.h);
+            
+            // 随机初速度
+            this.vx = (Math.random() - 0.5) * 1.5;
+            this.vy = (Math.random() - 0.5) * 1.5;
+
+            this.hovered = false;
+            this.element.onmouseenter = () => this.hovered = true;
+            this.element.onmouseleave = () => this.hovered = false;
+            this.element.onclick = () => alert(`跳转到 ${info.name} 的可视化演示...`);
         }
+
         update() {
-            this.x += this.vx;
-            this.y += this.vy;
-            if(this.x<0 || this.x>canvas.width) this.vx *= -1;
-            if(this.y<0 || this.y>canvas.height) this.vy *= -1;
-        }
-        draw() {
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.r, 0, Math.PI*2);
-            ctx.fillStyle = 'rgba(0, 210, 255, 0.3)';
-            ctx.fill();
-        }
-    }
+            if (!this.hovered) {
+                this.x += this.vx;
+                this.y += this.vy;
 
-    function init() {
-        resize();
-        pts = Array.from({length: 80}, () => new Particle());
-        loop();
-    }
-
-    function loop() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        pts.forEach(p => {
-            p.update();
-            p.draw();
-        });
-        
-        // 连线逻辑
-        for(let i=0; i<pts.length; i++) {
-            for(let j=i+1; j<pts.length; j++) {
-                let d = Math.hypot(pts[i].x-pts[j].x, pts[i].y-pts[j].y);
-                if(d < 150) {
-                    ctx.beginPath();
-                    ctx.moveTo(pts[i].x, pts[i].y);
-                    ctx.lineTo(pts[j].x, pts[j].y);
-                    ctx.strokeStyle = `rgba(0, 210, 255, ${1 - d/150})`;
-                    ctx.lineWidth = 0.5;
-                    ctx.stroke();
+                // 碰到左右边缘反弹
+                if (this.x <= 0 || this.x + this.w >= window.innerWidth) {
+                    this.vx *= -1;
+                }
+                // 碰到上下边缘反弹
+                if (this.y <= 0 || this.y + this.h >= window.innerHeight) {
+                    this.vy *= -1;
                 }
             }
+            this.element.style.transform = `translate(${this.x}px, ${this.y}px) ${this.hovered ? 'scale(1.2)' : 'scale(1)'}`;
         }
-        requestAnimationFrame(loop);
     }
 
-    window.onresize = resize;
+    // 初始化标签
+    function init() {
+        algorithms.forEach(item => {
+            tags.push(new Tag(item));
+        });
+        animate();
+    }
+
+    function animate() {
+        tags.forEach(t => t.update());
+        requestAnimationFrame(animate);
+    }
+
+    // 窗口大小变化时重置
+    window.onresize = () => {
+        tags.forEach(t => {
+            t.x = Math.min(t.x, window.innerWidth - t.w);
+            t.y = Math.min(t.y, window.innerHeight - t.h);
+        });
+    };
+
     init();
 </script>
 
