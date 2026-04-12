@@ -1,213 +1,249 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<title>ACcsp算法实验室 - NOI 2025 全量版</title>
-<style>
-:root{--bg:#020610;}
-*,*::before,*::after{box-sizing:border-box;}
-body,html{margin:0;padding:0;width:100%;height:100%;background:var(--bg);font-family:'Consolas','PingFang SC',monospace;overflow:hidden;color:#fff;}
-#starCanvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;}
-header{position:absolute;top:20px;left:20px;z-index:100;pointer-events:none;}
-h1{margin:0;font-size:28px;background:linear-gradient(to right,#ff4d4d,#00a2ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+    <meta charset="UTF-8">
+    <title>ACcsp算法实验室 - NOI 2025 版</title>
+    <style>
+        :root { --bg: #020610; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg); font-family: 'Consolas', 'PingFang SC', sans-serif; overflow: hidden; color: #fff; }
+        
+        #starCanvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+        
+        header { position: absolute; top: 20px; left: 20px; z-index: 100; pointer-events: none; }
+        h1 { margin: 0; font-size: 32px; background: linear-gradient(to right, #ff4d4d, #00a2ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .tag { position: absolute; padding: 8px 18px; border-radius: 50px; cursor: pointer; white-space: nowrap; font-weight: bold; font-size: 13px; transition: transform 0.2s, box-shadow 0.2s; border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(4px); user-select: none; z-index: 10; }
+        .tag:hover { transform: scale(1.3) !important; z-index: 1000 !important; box-shadow: 0 0 30px currentColor; background: rgba(255,255,255,0.1); }
+        
+        .diff-1-2 { color: #ff4d4d; border-color: #ff4d4d80; background: #ff4d4d1a; }
+        .diff-3-4 { color: #ffa500; border-color: #ffa50080; background: #ffa5001a; }
+        .diff-5-6 { color: #ffff00; border-color: #ffff0080; background: #ffff001a; }
+        .diff-7   { color: #00ff00; border-color: #00ff0080; background: #00ff001a; }
+        .diff-8   { color: #00a2ff; border-color: #00a2ff80; background: #00a2ff1a; }
 
-/* 标签样式与难度配色 */
-.tag{position:absolute;padding:6px 14px;border-radius:50px;cursor:pointer;white-space:nowrap;font-weight:bold;font-size:12px;transition:transform 0.15s,box-shadow 0.15s;border:1px solid rgba(255,255,255,0.15);backdrop-filter:blur(4px);user-select:none;z-index:10;}
-.tag:hover{transform:scale(1.35)!important;z-index:1000!important;box-shadow:0 0 28px currentColor;}
-
-/* 1-2级: 红色 */
-.diff-1{color:#ff4d4d;border-color:#ff4d4d55;background:#ff4d4d12;}
-/* 3-4级: 橙色 */
-.diff-2{color:#ff7a00;border-color:#ff7a0055;background:#ff7a0012;}
-/* 5-6级: 黄色 */
-.diff-3{color:#ffd000;border-color:#ffd00055;background:#ffd00012;}
-/* 7级: 绿色 */
-.diff-4{color:#00ff88;border-color:#00ff8855;background:#00ff8812;}
-/* 8级: 蓝色 */
-.diff-5{color:#00a2ff;border-color:#00a2ff55;background:#00a2ff12;}
-
-/* ── 详情面板 ── */
-#panel{position:fixed;top:0;right:-480px;width:460px;height:100%;background:rgba(4,11,28,0.96);border-left:1px solid rgba(255,255,255,0.07);backdrop-filter:blur(20px);z-index:2000;display:flex;flex-direction:column;transition:right 0.38s cubic-bezier(0.4,0,0.2,1);overflow:hidden;}
-#panel.open{right:0;}
-#ph{padding:18px 20px 14px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:flex-start;gap:10px;}
-#pm{flex:1;}
-#pt{font-size:20px;font-weight:bold;line-height:1.3;margin-bottom:7px;}
-#pb{display:flex;flex-wrap:wrap;gap:5px;}
-.bdg{font-size:11px;padding:2px 9px;border-radius:50px;border:1px solid;white-space:nowrap;}
-#pc-btn{background:none;border:none;color:#556;cursor:pointer;font-size:18px;padding:0;flex-shrink:0;margin-top:2px;transition:color .2s;}
-#pc-btn:hover{color:#fff;}
-#pb-body{flex:1;overflow-y:auto;padding:18px 20px;scrollbar-width:thin;scrollbar-color:#1e2e44 transparent;}
-#pb-body::-webkit-scrollbar{width:4px;}
-#pb-body::-webkit-scrollbar-thumb{background:#1e2e44;border-radius:4px;}
-.sec{margin-bottom:16px;}
-.sec-lbl{font-size:10px;letter-spacing:1.8px;text-transform:uppercase;color:#445566;margin-bottom:6px;}
-.sec-body{font-size:13.5px;line-height:1.85;color:#b8c8dc;}
-.chip-row{display:flex;flex-wrap:wrap;gap:5px;}
-.chip{font-size:11px;padding:3px 9px;border-radius:50px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.09);color:#8899aa;}
-.cbox{background:rgba(0,200,150,0.07);border:1px solid rgba(0,200,150,0.18);border-radius:8px;padding:9px 14px;font-size:13px;color:#55ddaa;font-family:'Consolas',monospace;}
-.ilist{list-style:none;padding:0;margin:0;}
-.ilist li{padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:13px;color:#a0b4c8;}
-.ilist li::before{content:"› ";color:#334455;}
-.sylbox{background:rgba(255,208,0,0.05);border-left:2px solid #ffd00040;padding:9px 12px;border-radius:0 6px 6px 0;font-size:12.5px;line-height:1.8;color:#ccbb77;}
-
-.legend{position:absolute;bottom:18px;left:18px;font-size:11px;display:flex;flex-direction:column;gap:7px;background:rgba(0,0,0,0.65);padding:12px 14px;border-radius:8px;border:1px solid #1a2535;pointer-events:none;z-index:100;}
-.lg-i{display:flex;align-items:center;gap:8px;}
-.hint{position:absolute;bottom:20px;right:20px;font-size:11px;color:#334455;z-index:100;pointer-events:none;}
-</style>
+        .legend { position: absolute; bottom: 20px; left: 20px; font-size: 11px; display: flex; flex-direction: column; gap: 8px; background: rgba(0,0,0,0.6); padding: 15px; border-radius: 8px; border: 1px solid #333; pointer-events: none; z-index: 100; }
+        .lg-i { display: flex; align-items: center; gap: 8px; }
+    </style>
 </head>
 <body>
-<canvas id="starCanvas"></canvas>
-<header>
-  <h1>ACcsp算法实验室</h1>
-  <div style="color:#445;font-size:12px;margin-top:4px;">NOI 2025 大纲 · 入门级 & 提高级 · 全量算法地图</div>
-</header>
-<div id="box" style="position:relative;width:100vw;height:100vh;z-index:5;"></div>
 
-<div id="panel">
-  <div id="ph">
-    <div id="pm">
-      <div id="pt">—</div>
-      <div id="pb"></div>
-    </div>
-    <button id="pc-btn" onclick="closePanel()">✕</button>
-  </div>
-  <div id="pb-body"><div id="pc"></div></div>
-</div>
+<canvas id="starCanvas"></canvas>
+
+<header>
+    <h1>ACcsp算法实验室</h1>
+    <div style="color: #888; font-size: 14px; margin-top: 5px;">基于 2025 NOI 大纲 · 全量算法空间</div>
+</header>
+
+<div id="box" style="position:relative; width: 100vw; height: 100vh; z-index: 5;"></div>
 
 <div class="legend">
-  <div class="lg-i"><span style="color:#ff4d4d">●</span> 难度 1-2 · 红色</div>
-  <div class="lg-i"><span style="color:#ff7a00">●</span> 难度 3-4 · 橙色</div>
-  <div class="lg-i"><span style="color:#ffd000">●</span> 难度 5-6 · 黄色</div>
-  <div class="lg-i"><span style="color:#00ff88">●</span> 难度 7 · 绿色</div>
-  <div class="lg-i"><span style="color:#00a2ff">●</span> 难度 8 · 蓝色</div>
+    <div class="lg-i"><span style="color:#ff4d4d">●</span> 难度 1-2 (入门基础语法/组合数学)</div>
+    <div class="lg-i"><span style="color:#ffa500">●</span> 难度 3-4 (普及核心贪心/搜索)</div>
+    <div class="lg-i"><span style="color:#ffff00">●</span> 难度 5-6 (提高基础DP/简单图论)</div>
+    <div class="lg-i"><span style="color:#00ff00">●</span> 难度 7 (提高核心树形DP/高级图论)</div>
+    <div class="lg-i"><span style="color:#00a2ff">●</span> 难度 8 (省选/NOI网络流/组合数学高级)</div>
 </div>
-<div class="hint">点击标签查看大纲详解</div>
 
 <script>
-// ── 星空 ──────────────────────────────────────────────────
-const canvas=document.getElementById('starCanvas'),ctx=canvas.getContext('2d');
-function resize(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
-resize();window.addEventListener('resize',resize);
-const stars=Array.from({length:260},()=>({x:Math.random()*innerWidth,y:Math.random()*innerHeight,r:Math.random()*1.4+0.2,a:Math.random()*0.7+0.3,ts:Math.random()*.02+.005,to:Math.random()*Math.PI*2}));
-const meteors=[];let nextM=Math.random()*3000+1500,lastT=0;
-function spawnM(){const ang=(Math.random()*30+20)*Math.PI/180,sp=Math.random()*10+8;meteors.push({x:Math.random()*innerWidth*1.2,y:Math.random()*innerHeight*.5,vx:Math.cos(ang)*sp,vy:Math.sin(ang)*sp,len:Math.random()*180+70,sp,life:1,decay:Math.random()*.012+.008,w:Math.random()*1.3+0.4});}
-requestAnimationFrame(function sky(t){
-  requestAnimationFrame(sky);const dt=t-lastT;lastT=t;
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  const g=ctx.createRadialGradient(canvas.width*.5,canvas.height*.4,0,canvas.width*.5,canvas.height*.4,canvas.width*.75);
-  g.addColorStop(0,'#0b1830');g.addColorStop(.5,'#060f20');g.addColorStop(1,'#020610');
-  ctx.fillStyle=g;ctx.fillRect(0,0,canvas.width,canvas.height);
-  stars.forEach(s=>{const f=.55+.45*Math.sin(t*s.ts+s.to);ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle=`rgba(255,255,255,${s.a*f})`;ctx.fill();});
-  nextM-=dt;if(nextM<=0){spawnM();if(Math.random()<.25)spawnM();nextM=Math.random()*4500+1500;}
-  for(let i=meteors.length-1;i>=0;i--){const m=meteors[i];m.x+=m.vx;m.y+=m.vy;m.life-=m.decay;
-    if(m.life<=0||m.x>canvas.width+200||m.y>canvas.height+200){meteors.splice(i,1);continue;}
-    const tx=m.x-m.vx/m.sp*m.len,ty=m.y-m.vy/m.sp*m.len;
-    const mg=ctx.createLinearGradient(tx,ty,m.x,m.y);mg.addColorStop(0,'rgba(255,255,255,0)');mg.addColorStop(1,`rgba(200,220,255,${m.life*.85})`);
-    ctx.beginPath();ctx.moveTo(tx,ty);ctx.lineTo(m.x,m.y);ctx.strokeStyle=mg;ctx.lineWidth=m.w;ctx.lineCap='round';ctx.stroke();}
-});
+// ─────────────── 星空 + 流星 ───────────────
+const canvas = document.getElementById('starCanvas');
+const ctx = canvas.getContext('2d');
 
-// ── 全量知识点数据（映射难度颜色） ──────────────────────────
-// d: 1=(1-2红) 2=(3-4橙) 3=(5-6黄) 4=(7绿) 5=(8蓝)
+function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+// 生成静态星星
+const STAR_COUNT = 260;
+const stars = Array.from({ length: STAR_COUNT }, () => ({
+    x: Math.random() * window.innerWidth,
+    y: Math.random() * window.innerHeight,
+    r: Math.random() * 1.5 + 0.2,
+    alpha: Math.random() * 0.7 + 0.3,
+    // 闪烁参数
+    twinkleSpeed: Math.random() * 0.02 + 0.005,
+    twinkleOffset: Math.random() * Math.PI * 2,
+}));
+
+// 流星池
+const meteors = [];
+
+function spawnMeteor() {
+    const angle = (Math.random() * 30 + 20) * Math.PI / 180; // 20~50° 斜角
+    const len = Math.random() * 180 + 80;
+    const speed = Math.random() * 10 + 8;
+    const startX = Math.random() * window.innerWidth * 1.2;
+    const startY = Math.random() * window.innerHeight * 0.5;
+    meteors.push({
+        x: startX, y: startY,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        len, speed,
+        alpha: 1,
+        width: Math.random() * 1.5 + 0.5,
+        life: 1,          // 1→0
+        decay: Math.random() * 0.012 + 0.008,
+    });
+}
+
+// 随机安排下一颗流星
+let nextMeteorIn = Math.random() * 3000 + 1000;
+let lastTime = 0;
+
+function drawStars(t) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // 深空渐变底色
+    const grad = ctx.createRadialGradient(
+        canvas.width * 0.5, canvas.height * 0.4, 0,
+        canvas.width * 0.5, canvas.height * 0.4, canvas.width * 0.75
+    );
+    grad.addColorStop(0, '#0a1628');
+    grad.addColorStop(0.5, '#050e1f');
+    grad.addColorStop(1, '#020610');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // 画星星（带闪烁）
+    stars.forEach(s => {
+        const flicker = 0.5 + 0.5 * Math.sin(t * s.twinkleSpeed + s.twinkleOffset);
+        const a = s.alpha * (0.6 + 0.4 * flicker);
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255,255,255,${a})`;
+        ctx.fill();
+    });
+}
+
+function drawMeteors() {
+    meteors.forEach(m => {
+        const tailX = m.x - m.vx / m.speed * m.len;
+        const tailY = m.y - m.vy / m.speed * m.len;
+        const grd = ctx.createLinearGradient(tailX, tailY, m.x, m.y);
+        grd.addColorStop(0, `rgba(255,255,255,0)`);
+        grd.addColorStop(1, `rgba(200,220,255,${m.life * 0.9})`);
+        ctx.beginPath();
+        ctx.moveTo(tailX, tailY);
+        ctx.lineTo(m.x, m.y);
+        ctx.strokeStyle = grd;
+        ctx.lineWidth = m.width;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+
+        // 头部光晕
+        const glowR = ctx.createRadialGradient(m.x, m.y, 0, m.x, m.y, 4);
+        glowR.addColorStop(0, `rgba(180,210,255,${m.life * 0.8})`);
+        glowR.addColorStop(1, `rgba(180,210,255,0)`);
+        ctx.beginPath();
+        ctx.arc(m.x, m.y, 4, 0, Math.PI * 2);
+        ctx.fillStyle = glowR;
+        ctx.fill();
+    });
+}
+
+function animateSky(t) {
+    requestAnimationFrame(animateSky);
+
+    const dt = t - lastTime;
+    lastTime = t;
+
+    drawStars(t);
+
+    // 流星计时
+    nextMeteorIn -= dt;
+    if (nextMeteorIn <= 0) {
+        // 偶尔同时出现 2 颗
+        spawnMeteor();
+        if (Math.random() < 0.25) spawnMeteor();
+        nextMeteorIn = Math.random() * 4000 + 1500;
+    }
+
+    // 更新 & 绘制流星
+    for (let i = meteors.length - 1; i >= 0; i--) {
+        const m = meteors[i];
+        m.x += m.vx;
+        m.y += m.vy;
+        m.life -= m.decay;
+        if (m.life <= 0 || m.x > canvas.width + 200 || m.y > canvas.height + 200) {
+            meteors.splice(i, 1);
+        }
+    }
+    drawMeteors();
+}
+
+requestAnimationFrame(animateSky);
+
+// ─────────────── 算法标签浮动 ───────────────
 const algos = [
-  // 难度 1-2 (红色)
-  {n:"枚举法", d:1, raw:"【1】", section:"入门级·算法", summary:"最基础的暴力思路，通过遍历解空间找到答案。", complexity:"O(解空间大小)", syllabus:"2.1.4 枚举法", ideas:["确定枚举对象","设定枚举范围","剪枝优化"], problems:["百钱买百鸡","水仙花数"], keywords:["暴力","穷举"], tip:"新手入门第一步。"},
-  {n:"模拟法", d:1, raw:"【1】", section:"入门级·算法", summary:"按照题目描述的逻辑直接编写代码。", complexity:"O(模拟步骤数)", syllabus:"2.1.4 模拟法", ideas:["不折不扣执行题意","注意边界细节"], problems:["日期计算","报数游戏"], keywords:["还原题意"], tip:"关键在于细心。"},
-  {n:"递归函数", d:1, raw:"【2】", section:"入门级·程序设计", summary:"函数调用自身，处理分治逻辑的基础。", complexity:"O(递归树大小)", syllabus:"2.1.2 函数与递归", ideas:["递归出口","状态传递"], problems:["阶乘","汉诺塔"], keywords:["自调用","栈"], tip:"理解递归出口是关键。"},
-  
-  // 难度 3-4 (橙色)
-  {n:"贪心算法", d:2, raw:"【3】", section:"入门级·基础算法", summary:"每步选择局部最优，期望达到全局最优。", complexity:"通常 O(N log N)", syllabus:"2.1.4 贪心法", ideas:["贪心策略证明","排序后处理"], problems:["活动选择","硬币找零"], keywords:["局部最优","排序"], tip:"贪心容易想错，务必验证策略。"},
-  {n:"快速排序", d:2, raw:"【4】", section:"入门级·排序", summary:"基于分治的经典排序，竞赛中最常用。", complexity:"平均 O(N log N)", syllabus:"2.1.4 快速排序", ideas:["选主元","双指针分区"], problems:["第K大数查询"], keywords:["分治","主元"], tip:"理解 partition 的过程。"},
-  {n:"二分查找", d:2, raw:"【4】", section:"入门级·算法策略", summary:"在有序序列中折半搜索，效率极高。", complexity:"O(log N)", syllabus:"2.1.4 二分法", ideas:["单调性前提","左右边界缩减"], problems:["查找有序数组元素","二分答案"], keywords:["折半","单调性"], tip:"重点掌握“二分答案”技巧。"},
-  {n:"单调栈", d:2, raw:"【4】", section:"提高级·线性结构", summary:"栈内元素保持单调递增或递减。", complexity:"O(N)", syllabus:"2.2.3 单调栈", ideas:["及时排除无用信息","维护单调性"], problems:["下一个更大元素","柱状图面积"], keywords:["LIFO","单调性"], tip:"求“最近的更大/小值”利器。"},
-
-  // 难度 5-6 (黄色)
-  {n:"Dijkstra", d:3, raw:"【6】", section:"提高级·图论", summary:"求带权图单源最短路径的经典算法。", complexity:"O(E log V)", syllabus:"2.2.4 最短路", ideas:["贪心选择最近点","堆优化松弛"], problems:["单源最短路"], keywords:["最短路","堆优化"], tip:"不能处理负权边。"},
-  {n:"并查集", d:3, raw:"【6】", section:"提高级·集合", summary:"高效维护集合合并与查询连通性。", complexity:"约 O(α(N))", syllabus:"2.2.3 并查集", ideas:["路径压缩","按秩合并"], problems:["连通分量计数","最小生成树"], keywords:["合并","查找"], tip:"路径压缩能极大提速。"},
-  {n:"线段树", d:3, raw:"【6】", section:"提高级·特殊树", summary:"处理区间修改与查询的万能工具。", complexity:"O(log N)", syllabus:"2.2.3 线段树", ideas:["懒标记","分治递归"], problems:["区间和/最值查询"], keywords:["区间修改","懒标记"], tip:"注意4倍空间和懒标记下传。"},
-  {n:"树形DP", d:3, raw:"【6】", section:"提高级·动态规划", summary:"在树状结构上进行的动态规划。", complexity:"O(N)", syllabus:"2.2.4 树形DP", ideas:["自底向上递归","子树信息合并"], problems:["没有上司的舞会"], keywords:["树","递归"], tip:"通常通过 DFS 实现。"},
-
-  // 难度 7 (绿色)
-  {n:"Tarjan强连通", d:4, raw:"【7】", section:"提高级·图论", summary:"在有向图中寻找强连通分量。", complexity:"O(V+E)", syllabus:"2.2.4 强连通分量", ideas:["dfn与low数组","栈维护"], problems:["缩点简化图"], keywords:["SCC","缩点"], tip:"熟练掌握dfn和low的含义。"},
-  {n:"最近公共祖先(LCA)", d:4, raw:"【7】", section:"提高级·图论", summary:"求树中两个节点的最近公共祖先。", complexity:"预处理 O(N log N) 查询 O(log N)", syllabus:"2.2.4 LCA", ideas:["倍增跳跃","欧拉序+RMQ"], problems:["树上两点距离"], keywords:["倍增","最近祖先"], tip:"倍增法是最通用的写法。"},
-  {n:"状态压缩DP", d:4, raw:"【7】", section:"提高级·动态规划", summary:"用整数二进制表示集合状态。", complexity:"O(2^N * poly)", syllabus:"2.2.4 状压DP", ideas:["位运算操作","集合状态转移"], problems:["TSP问题","小国王"], keywords:["位运算","集合"], tip:"适用于 N 较小的情况（通常 N<20）。"},
-  {n:"中国剩余定理", d:4, raw:"【7】", section:"提高级·数论", summary:"求解一元线性同余方程组。", complexity:"O(K log M)", syllabus:"2.2.5 中国剩余定理", ideas:["互质构造","扩展欧几里得辅助"], problems:["孙子定理"], keywords:["同余","方程组"], tip:"理解模数互质的前提。"},
-
-  // 难度 8 (蓝色)
-  {n:"最大流/最小割", d:5, raw:"【8】", section:"省选/提高极点·网络流", summary:"网络流理论核心，解决分配与割裂问题。", complexity:"Dinic: O(V^2 E)", syllabus:"2.2.4 网络流", ideas:["增广路","分层图"], problems:["最大匹配","最小切割"], keywords:["流量","残量图"], tip:"Dinic 算法是常用模板。"},
-  {n:"后缀自动机(SAM)", d:5, raw:"【8】", section:"省选/提高极点·字符串", summary:"处理字符串子串问题的最强工具。", complexity:"O(N)", syllabus:"2.2.4 字符串算法", ideas:["状态转移","后缀链接"], problems:["子串出现次数","LCS"], keywords:["状态机","后缀"], tip:"逻辑复杂，需要深入理解 endpos 集合。"},
-  {n:"CDQ分治", d:5, raw:"【8】", section:"省选/提高极点·算法策略", summary:"处理多维偏序问题的分治技巧。", complexity:"O(N log^k N)", syllabus:"2.2.4 算法策略", ideas:["左区间更新右区间","离线处理"], problems:["三维偏序"], keywords:["分治","偏序"], tip:"将动态问题转化为静态处理。"},
-  {n:"生成函数", d:5, raw:"【8】", section:"省选/提高极点·数学", summary:"用多项式系数表达序列，解决组合计数。", complexity:"取决于多项式运算", syllabus:"2.2.5 组合数学", ideas:["母函数","多项式FFT加速"], problems:["硬币组合","递归序列通项"], keywords:["多项式","计数"], tip:"结合 FFT/NTT 威力倍增。"}
+    { n: "C++语法基础", d: 1 }, { n: "控制结构", d: 1 }, { n: "函数与递归", d: 2 }, { n: "简单数组", d: 2 },
+    { n: "整数最大公约数", d: 2 }, { n: "菲波那契数列", d: 2 }, { n: "简单逻辑与集合", d: 2 },
+    { n: "冒泡/插入排序", d: 3 }, { n: "贪心算法基础", d: 3 }, { n: "排列组合基础", d: 4 }, { n: "二分查找", d: 4 },
+    { n: "哈希表", d: 4 }, { n: "栈与队列", d: 4 }, { n: "简单模拟", d: 3 }, { n: "网格图BFS", d: 4 },
+    { n: "线性DP", d: 5 }, { n: "背包问题", d: 5 }, { n: "并查集", d: 5 }, { n: "Dijkstra最短路", d: 5 },
+    { n: "Kruskal最小生成树", d: 6 }, { n: "树状数组", d: 6 }, { n: "线段树", d: 6 }, { n: "拓扑排序", d: 6 },
+    { n: "简单数论 (质数/模算)", d: 5 }, { n: "二叉搜索树", d: 6 }, { n: "分治算法", d: 5 },
+    { n: "区间DP", d: 7 }, { n: "树形DP", d: 7 }, { n: "状态压缩DP", d: 7 }, { n: "网络流基础", d: 7 },
+    { n: "Tarjan强连通", d: 7 }, { n: "倍增LCA", d: 7 }, { n: "ST表 (RMQ)", d: 7 }, { n: "组合数学进阶", d: 7 },
+    { n: "矩阵乘法", d: 7 }, { n: "欧拉路径与回路", d: 7 }, { n: "动态数论 (CRT/逆元)", d: 7 },
+    { n: "最大流与最小割", d: 8 }, { n: "费用流算法", d: 8 }, { n: "CDQ分治", d: 8 }, { n: "莫队算法", d: 8 },
+    { n: "FFT快速傅里叶", d: 8 }, { n: "动态树 (LCT)", d: 8 }, { n: "平衡树 (Splay/Treap)", d: 8 }, { n: "生成函数", d: 8 },
+    { n: "后缀自动机/数", d: 8 }, { n: "莫比乌斯反演", d: 8 }, { n: "博弈论", d: 8 }, { n: "离线算法", d: 8 }
 ];
 
-// ── 难度映射 ──────────────────────────────────────────────
-const DC = {1:'#ff4d4d',2:'#ff7a00',3:'#ffd000',4:'#00ff88',5:'#00a2ff'};
-const DL = {1:'难度 1-2 · 红',2:'难度 3-4 · 橙',3:'难度 5-6 · 黄',4:'难度 7 · 绿',5:'难度 8 · 蓝'};
+const box = document.getElementById('box');
+const items = [];
 
-// ── 逻辑实现 ─────────────────────────────────────────────
-const box=document.getElementById('box');
-const items=[];let paused=false;
+class Label {
+    constructor(info) {
+        const el = document.createElement('div');
+        const cls = info.d <= 2 ? '1-2' : info.d <= 4 ? '3-4' : info.d <= 6 ? '5-6' : info.d === 7 ? '7' : '8';
+        el.className = `tag diff-${cls}`;
+        el.innerText = info.n;
+        box.appendChild(el);
 
-class Label{
-  constructor(info){
-    const el=document.createElement('div');
-    el.className=`tag diff-${info.d}`;
-    el.innerText=info.n;
-    box.appendChild(el);
-    this.el=el;this.info=info;
-    this.w=el.offsetWidth;this.h=el.offsetHeight;
-    this.x=Math.random()*(innerWidth-this.w);
-    this.y=Math.random()*(innerHeight-this.h);
-    const spd=0.4 + (info.d * 0.1);
-    this.vx=(Math.random()-.5)*spd*2.5;
-    this.vy=(Math.random()-.5)*spd*2.5;
-    this.hover=false;
-    el.onmouseenter=()=>this.hover=true;
-    el.onmouseleave=()=>this.hover=false;
-    el.onclick=()=>openPanel(info);
-  }
-  move(){
-    if(!this.hover&&!paused){
-      this.x+=this.vx;this.y+=this.vy;
-      if(this.x<=0||this.x+this.w>=innerWidth)this.vx*=-1;
-      if(this.y<=0||this.y+this.h>=innerHeight)this.vy*=-1;
+        this.el = el;
+        this.w = el.offsetWidth;
+        this.h = el.offsetHeight;
+        this.x = Math.random() * (window.innerWidth - this.w);
+        this.y = Math.random() * (window.innerHeight - this.h);
+        this.vx = (Math.random() - 0.5) * 1.1;
+        this.vy = (Math.random() - 0.5) * 1.1;
+        this.stop = false;
+
+        el.onmouseenter = () => this.stop = true;
+        el.onmouseleave = () => this.stop = false;
     }
-    this.el.style.transform=`translate(${this.x}px,${this.y}px)`;
-  }
+
+    move() {
+        if (!this.stop) {
+            this.x += this.vx; this.y += this.vy;
+            if (this.x <= 0 || this.x + this.w >= window.innerWidth) this.vx *= -1;
+            if (this.y <= 0 || this.y + this.h >= window.innerHeight) this.vy *= -1;
+        }
+        this.el.style.transform = `translate(${this.x}px, ${this.y}px)`;
+    }
 }
 
-function openPanel(info){
-  paused=true;
-  const panel=document.getElementById('panel');
-  document.getElementById('pt').textContent=info.n;
-  const pb=document.getElementById('pb');
-  pb.innerHTML='';
-  const c=DC[info.d];
-  const b1=document.createElement('span');b1.className='bdg';b1.textContent=DL[info.d];
-  b1.style.color=c;b1.style.borderColor=c+'55';b1.style.background=c+'10';
-  pb.appendChild(b1);
-  
-  const b2=document.createElement('span');b2.className='bdg';b2.textContent=info.section;
-  b2.style.color='#5577aa';b2.style.borderColor='#5577aa55';
-  pb.appendChild(b2);
-
-  document.getElementById('pc').innerHTML=`
-    <div class="sec"><div class="sec-lbl">简介</div><div class="sec-body">${info.summary}</div></div>
-    <div class="sec"><div class="sec-lbl">大纲定位</div><div class="sylbox">${info.syllabus} ${info.raw}</div></div>
-    <div class="sec"><div class="sec-lbl">复杂度</div><div class="cbox">${info.complexity}</div></div>
-    <div class="sec"><div class="sec-lbl">核心思路</div><ul class="ilist">${info.ideas.map(i=>`<li>${i}</li>`).join('')}</ul></div>
-    <div class="sec"><div class="sec-lbl">经典问题</div><ul class="ilist">${info.problems.map(p=>`<li>${p}</li>`).join('')}</ul></div>
-    <div class="sec"><div class="sec-lbl">学习建议</div><div class="sec-body">${info.tip}</div></div>
-  `;
-  panel.classList.add('open');
+function runTags() {
+    algos.forEach(a => items.push(new Label(a)));
+    const frame = () => {
+        items.forEach(i => i.move());
+        requestAnimationFrame(frame);
+    };
+    frame();
 }
 
-function closePanel(){document.getElementById('panel').classList.remove('open');paused=false;}
+window.onresize = () => {
+    resize();
+    items.forEach(i => {
+        i.x = Math.min(i.x, window.innerWidth - i.w);
+        i.y = Math.min(i.y, window.innerHeight - i.h);
+    });
+};
 
-algos.forEach(a=>items.push(new Label(a)));
-function loop(){items.forEach(i=>i.move());requestAnimationFrame(loop);}
-loop();
-
-document.getElementById('box').addEventListener('click',e=>{if(!e.target.classList.contains('tag'))closePanel();});
+runTags();
 </script>
 </body>
 </html>
