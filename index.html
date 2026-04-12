@@ -4,326 +4,758 @@
 <meta charset="UTF-8">
 <title>ACcsp算法实验室 - NOI 2025 版</title>
 <style>
-:root { --bg: #020610; }
-*, *::before, *::after { box-sizing: border-box; }
-body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg); font-family: 'Consolas', 'PingFang SC', monospace; overflow: hidden; color: #fff; }
+:root{--bg:#020610;}
+*,*::before,*::after{box-sizing:border-box;}
+body,html{margin:0;padding:0;width:100%;height:100%;background:var(--bg);font-family:'Consolas','PingFang SC',monospace;overflow:hidden;color:#fff;}
+#starCanvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+header{position:absolute;top:20px;left:20px;z-index:100;pointer-events:none;}
+h1{margin:0;font-size:28px;background:linear-gradient(to right,#ff4d4d,#00ff88);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
 
-#starCanvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
-
-header { position: absolute; top: 20px; left: 20px; z-index: 100; pointer-events: none; }
-h1 { margin: 0; font-size: 28px; background: linear-gradient(to right, #ff4d4d, #00a2ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-
-.tag {
-  position: absolute; padding: 6px 14px; border-radius: 50px; cursor: pointer;
-  white-space: nowrap; font-weight: bold; font-size: 12px;
-  transition: transform 0.15s, box-shadow 0.15s;
-  border: 1px solid rgba(255,255,255,0.15); backdrop-filter: blur(4px);
-  user-select: none; z-index: 10;
-}
-.tag:hover { transform: scale(1.35) !important; z-index: 1000 !important; box-shadow: 0 0 28px currentColor; }
-.diff-1 { color: #ff4d4d; border-color: #ff4d4d60; background: #ff4d4d12; }
-.diff-2 { color: #ff7a00; border-color: #ff7a0060; background: #ff7a0012; }
-.diff-3 { color: #ffd000; border-color: #ffd00060; background: #ffd00012; }
-.diff-4 { color: #00ff88; border-color: #00ff8860; background: #00ff8812; }
-.diff-5 { color: #00a2ff; border-color: #00a2ff60; background: #00a2ff12; }
+.tag{position:absolute;padding:6px 14px;border-radius:50px;cursor:pointer;white-space:nowrap;font-weight:bold;font-size:12px;transition:transform 0.15s,box-shadow 0.15s;border:1px solid rgba(255,255,255,0.15);backdrop-filter:blur(4px);user-select:none;z-index:10;}
+.tag:hover{transform:scale(1.35)!important;z-index:1000!important;box-shadow:0 0 28px currentColor;}
+.diff-1{color:#ff4d4d;border-color:#ff4d4d55;background:#ff4d4d12;}
+.diff-2{color:#ff7a00;border-color:#ff7a0055;background:#ff7a0012;}
+.diff-3{color:#ffd000;border-color:#ffd00055;background:#ffd00012;}
+.diff-4{color:#00ff88;border-color:#00ff8855;background:#00ff8812;}
 
 /* ── 详情面板 ── */
-#panel {
-  position: fixed; top: 0; right: -480px; width: 460px; height: 100%;
-  background: rgba(4, 11, 28, 0.94);
-  border-left: 1px solid rgba(255,255,255,0.08);
-  backdrop-filter: blur(20px);
-  z-index: 2000; display: flex; flex-direction: column;
-  transition: right 0.38s cubic-bezier(0.4,0,0.2,1);
-  overflow: hidden;
-}
-#panel.open { right: 0; }
+#panel{position:fixed;top:0;right:-480px;width:460px;height:100%;background:rgba(4,11,28,0.96);border-left:1px solid rgba(255,255,255,0.07);backdrop-filter:blur(20px);z-index:2000;display:flex;flex-direction:column;transition:right 0.38s cubic-bezier(0.4,0,0.2,1);overflow:hidden;}
+#panel.open{right:0;}
+#ph{padding:18px 20px 14px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:flex-start;gap:10px;}
+#pm{flex:1;}
+#pt{font-size:20px;font-weight:bold;line-height:1.3;margin-bottom:7px;}
+#pb{display:flex;flex-wrap:wrap;gap:5px;}
+.bdg{font-size:11px;padding:2px 9px;border-radius:50px;border:1px solid;white-space:nowrap;}
+#pc-btn{background:none;border:none;color:#556;cursor:pointer;font-size:18px;padding:0;flex-shrink:0;margin-top:2px;transition:color .2s;}
+#pc-btn:hover{color:#fff;}
+#pb-body{flex:1;overflow-y:auto;padding:18px 20px;scrollbar-width:thin;scrollbar-color:#1e2e44 transparent;}
+#pb-body::-webkit-scrollbar{width:4px;}
+#pb-body::-webkit-scrollbar-thumb{background:#1e2e44;border-radius:4px;}
+.sec{margin-bottom:16px;}
+.sec-lbl{font-size:10px;letter-spacing:1.8px;text-transform:uppercase;color:#445566;margin-bottom:6px;}
+.sec-body{font-size:13.5px;line-height:1.85;color:#b8c8dc;}
+.chip-row{display:flex;flex-wrap:wrap;gap:5px;}
+.chip{font-size:11px;padding:3px 9px;border-radius:50px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.09);color:#8899aa;}
+.cbox{background:rgba(0,200,150,0.07);border:1px solid rgba(0,200,150,0.18);border-radius:8px;padding:9px 14px;font-size:13px;color:#55ddaa;font-family:'Consolas',monospace;}
+.ilist{list-style:none;padding:0;margin:0;}
+.ilist li{padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:13px;color:#a0b4c8;}
+.ilist li::before{content:"› ";color:#334455;}
+.sylbox{background:rgba(255,208,0,0.05);border-left:2px solid #ffd00040;padding:9px 12px;border-radius:0 6px 6px 0;font-size:12.5px;line-height:1.8;color:#ccbb77;}
 
-#panel-header {
-  padding: 18px 20px 14px;
-  border-bottom: 1px solid rgba(255,255,255,0.07);
-  display: flex; align-items: flex-start; gap: 10px;
-}
-#panel-meta { flex: 1; }
-#panel-title { font-size: 19px; font-weight: bold; line-height: 1.3; margin-bottom: 6px; }
-#panel-badges { display: flex; flex-wrap: wrap; gap: 6px; }
-.badge {
-  font-size: 11px; padding: 2px 9px; border-radius: 50px;
-  border: 1px solid; white-space: nowrap;
-}
-#panel-close {
-  background: none; border: none; color: #666; cursor: pointer;
-  font-size: 18px; padding: 0; flex-shrink: 0; margin-top: 1px;
-  transition: color 0.2s;
-}
-#panel-close:hover { color: #fff; }
-
-#panel-body {
-  flex: 1; overflow-y: auto; padding: 18px 20px;
-  scrollbar-width: thin; scrollbar-color: #2a3a55 transparent;
-}
-#panel-body::-webkit-scrollbar { width: 4px; }
-#panel-body::-webkit-scrollbar-thumb { background: #2a3a55; border-radius: 4px; }
-
-.loading-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 220px; gap: 14px; }
-.spinner { width: 34px; height: 34px; border: 3px solid rgba(255,255,255,0.08); border-top-color: #00a2ff; border-radius: 50%; animation: spin 0.75s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
-.loading-tip { color: #555; font-size: 12px; }
-
-.sec { margin-bottom: 18px; }
-.sec-label { font-size: 10px; letter-spacing: 1.8px; text-transform: uppercase; color: #556; margin-bottom: 7px; }
-.sec-body { font-size: 13.5px; line-height: 1.85; color: #c0cce0; }
-.chip-row { display: flex; flex-wrap: wrap; gap: 5px; }
-.chip { font-size: 11px; padding: 3px 9px; border-radius: 50px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #99aabb; }
-.cbox { background: rgba(0,162,255,0.07); border: 1px solid rgba(0,162,255,0.18); border-radius: 8px; padding: 9px 13px; font-size: 13px; color: #6bbfff; font-family: 'Consolas', monospace; }
-.item-list { list-style: none; padding: 0; margin: 0; }
-.item-list li { padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 13px; color: #b0bfd0; }
-.item-list li::before { content: "› "; color: #445; }
-
-/* 大纲引文块 */
-.syllabus-block {
-  background: rgba(0,255,136,0.05); border-left: 2px solid #00ff8840;
-  padding: 10px 13px; border-radius: 0 6px 6px 0;
-  font-size: 12.5px; line-height: 1.8; color: #99ddb0;
-}
-
-/* 图例 */
-.legend {
-  position: absolute; bottom: 18px; left: 18px; font-size: 11px;
-  display: flex; flex-direction: column; gap: 7px;
-  background: rgba(0,0,0,0.65); padding: 12px 14px; border-radius: 8px;
-  border: 1px solid #1e2a3a; pointer-events: none; z-index: 100;
-}
-.lg-i { display: flex; align-items: center; gap: 8px; }
-.hint { position: absolute; bottom: 20px; right: 20px; font-size: 12px; color: #3a4a5a; z-index: 100; pointer-events: none; }
+.legend{position:absolute;bottom:18px;left:18px;font-size:11px;display:flex;flex-direction:column;gap:7px;background:rgba(0,0,0,0.65);padding:12px 14px;border-radius:8px;border:1px solid #1a2535;pointer-events:none;z-index:100;}
+.lg-i{display:flex;align-items:center;gap:8px;}
+.hint{position:absolute;bottom:20px;right:20px;font-size:11px;color:#334455;z-index:100;pointer-events:none;}
 </style>
 </head>
 <body>
 <canvas id="starCanvas"></canvas>
 <header>
   <h1>ACcsp算法实验室</h1>
-  <div style="color:#556;font-size:12px;margin-top:4px;">NOI 2025 大纲 · 全量知识点 · 点击查看详情</div>
+  <div style="color:#445;font-size:12px;margin-top:4px;">NOI 2025 大纲 · 入门级 & 提高级 · 点击标签查看详情</div>
 </header>
 <div id="box" style="position:relative;width:100vw;height:100vh;z-index:5;"></div>
 
 <div id="panel">
-  <div id="panel-header">
-    <div id="panel-meta">
-      <div id="panel-title">—</div>
-      <div id="panel-badges"></div>
+  <div id="ph">
+    <div id="pm">
+      <div id="pt">—</div>
+      <div id="pb"></div>
     </div>
-    <button id="panel-close" onclick="closePanel()">✕</button>
+    <button id="pc-btn" onclick="closePanel()">✕</button>
   </div>
-  <div id="panel-body">
-    <div class="loading-wrap" id="loading-wrap" style="display:none;">
-      <div class="spinner"></div>
-      <div class="loading-tip">正在生成详解…</div>
-    </div>
-    <div id="panel-content"></div>
-  </div>
+  <div id="pb-body"><div id="pc"></div></div>
 </div>
 
 <div class="legend">
   <div class="lg-i"><span style="color:#ff4d4d">●</span> 难度 1-2 · 入门级基础（CSP-J）</div>
   <div class="lg-i"><span style="color:#ff7a00">●</span> 难度 3-4 · 入门级核心（CSP-J）</div>
-  <div class="lg-i"><span style="color:#ffd000">●</span> 难度 5-6 · 提高级（CSP-S/NOIP）</div>
+  <div class="lg-i"><span style="color:#ffd000">●</span> 难度 5-6 · 提高级（CSP-S / NOIP）</div>
   <div class="lg-i"><span style="color:#00ff88">●</span> 难度 7 · 提高级核心（NOIP）</div>
-  <div class="lg-i"><span style="color:#00a2ff">●</span> 难度 8-10 · NOI/IOI 级</div>
 </div>
 <div class="hint">点击标签查看大纲详解</div>
 
 <script>
-// ─────────── 星空 ───────────
-const canvas = document.getElementById('starCanvas');
-const ctx = canvas.getContext('2d');
-function resize(){ canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
-resize(); window.addEventListener('resize',resize);
-
-const stars = Array.from({length:280},()=>({
-  x:Math.random()*window.innerWidth, y:Math.random()*window.innerHeight,
-  r:Math.random()*1.5+0.2, a:Math.random()*0.7+0.3,
-  ts:Math.random()*0.02+0.005, to:Math.random()*Math.PI*2
-}));
-const meteors=[]; let nextM=Math.random()*3000+1500, lastT=0;
-function spawnM(){
-  const ang=(Math.random()*30+20)*Math.PI/180, sp=Math.random()*10+8;
-  meteors.push({x:Math.random()*window.innerWidth*1.2,y:Math.random()*window.innerHeight*0.5,
-    vx:Math.cos(ang)*sp,vy:Math.sin(ang)*sp,len:Math.random()*180+70,sp,
-    life:1,decay:Math.random()*0.012+0.008,w:Math.random()*1.4+0.4});
-}
-requestAnimationFrame(function skyF(t){
-  requestAnimationFrame(skyF);
-  const dt=t-lastT; lastT=t;
+// ── 星空 ──────────────────────────────────────────────────
+const canvas=document.getElementById('starCanvas'),ctx=canvas.getContext('2d');
+function resize(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
+resize();window.addEventListener('resize',resize);
+const stars=Array.from({length:260},()=>({x:Math.random()*innerWidth,y:Math.random()*innerHeight,r:Math.random()*1.4+0.2,a:Math.random()*0.7+0.3,ts:Math.random()*.02+.005,to:Math.random()*Math.PI*2}));
+const meteors=[];let nextM=Math.random()*3000+1500,lastT=0;
+function spawnM(){const ang=(Math.random()*30+20)*Math.PI/180,sp=Math.random()*10+8;meteors.push({x:Math.random()*innerWidth*1.2,y:Math.random()*innerHeight*.5,vx:Math.cos(ang)*sp,vy:Math.sin(ang)*sp,len:Math.random()*180+70,sp,life:1,decay:Math.random()*.012+.008,w:Math.random()*1.3+0.4});}
+requestAnimationFrame(function sky(t){
+  requestAnimationFrame(sky);const dt=t-lastT;lastT=t;
   ctx.clearRect(0,0,canvas.width,canvas.height);
   const g=ctx.createRadialGradient(canvas.width*.5,canvas.height*.4,0,canvas.width*.5,canvas.height*.4,canvas.width*.75);
-  g.addColorStop(0,'#0b1830'); g.addColorStop(.5,'#060f20'); g.addColorStop(1,'#020610');
-  ctx.fillStyle=g; ctx.fillRect(0,0,canvas.width,canvas.height);
-  stars.forEach(s=>{
-    const f=.55+.45*Math.sin(t*s.ts+s.to);
-    ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
-    ctx.fillStyle=`rgba(255,255,255,${s.a*f})`; ctx.fill();
-  });
-  nextM-=dt; if(nextM<=0){spawnM();if(Math.random()<.25)spawnM();nextM=Math.random()*4500+1500;}
-  for(let i=meteors.length-1;i>=0;i--){
-    const m=meteors[i]; m.x+=m.vx; m.y+=m.vy; m.life-=m.decay;
+  g.addColorStop(0,'#0b1830');g.addColorStop(.5,'#060f20');g.addColorStop(1,'#020610');
+  ctx.fillStyle=g;ctx.fillRect(0,0,canvas.width,canvas.height);
+  stars.forEach(s=>{const f=.55+.45*Math.sin(t*s.ts+s.to);ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle=`rgba(255,255,255,${s.a*f})`;ctx.fill();});
+  nextM-=dt;if(nextM<=0){spawnM();if(Math.random()<.25)spawnM();nextM=Math.random()*4500+1500;}
+  for(let i=meteors.length-1;i>=0;i--){const m=meteors[i];m.x+=m.vx;m.y+=m.vy;m.life-=m.decay;
     if(m.life<=0||m.x>canvas.width+200||m.y>canvas.height+200){meteors.splice(i,1);continue;}
     const tx=m.x-m.vx/m.sp*m.len,ty=m.y-m.vy/m.sp*m.len;
-    const mg=ctx.createLinearGradient(tx,ty,m.x,m.y);
-    mg.addColorStop(0,'rgba(255,255,255,0)'); mg.addColorStop(1,`rgba(200,220,255,${m.life*.85})`);
-    ctx.beginPath(); ctx.moveTo(tx,ty); ctx.lineTo(m.x,m.y);
-    ctx.strokeStyle=mg; ctx.lineWidth=m.w; ctx.lineCap='round'; ctx.stroke();
-  }
+    const mg=ctx.createLinearGradient(tx,ty,m.x,m.y);mg.addColorStop(0,'rgba(255,255,255,0)');mg.addColorStop(1,`rgba(200,220,255,${m.life*.85})`);
+    ctx.beginPath();ctx.moveTo(tx,ty);ctx.lineTo(m.x,m.y);ctx.strokeStyle=mg;ctx.lineWidth=m.w;ctx.lineCap='round';ctx.stroke();}
 });
 
-// ─────────── 知识点数据（来自 NOI 2025 大纲全文）───────────
-// d: 1=入门基础(red) 2=入门核心(orange) 3=提高基础(yellow) 4=提高核心(green) 5=NOI级(blue)
-// 大纲原始难度系数 → 颜色分组: [1-2]→1, [3-4]→2, [5-6]→3, [7]→4, [8-10]→5
+// ── 知识点数据（来自 NOI 2025 大纲原文 + 详细说明）──────────
+// d: 1=入门基础 2=入门核心 3=提高基础 4=提高核心
 const algos = [
-  // ── 入门级基础 (大纲难度 1-2) ─────────────────────
-  { n:"枚举法", d:1, raw:1, level:"入门级", cat:"算法·入门算法", section:"2.1.4" },
-  { n:"模拟法", d:1, raw:1, level:"入门级", cat:"算法·入门算法", section:"2.1.4" },
-  { n:"顺序/分支/循环结构", d:1, raw:1, level:"入门级", cat:"C++程序设计·结构化", section:"2.1.2" },
-  { n:"递归函数", d:1, raw:2, level:"入门级", cat:"C++程序设计·函数", section:"2.1.2" },
-  { n:"加法/乘法原理", d:1, raw:2, level:"入门级", cat:"数学·离散组合数学", section:"2.1.5" },
-  { n:"集合基础", d:1, raw:2, level:"入门级", cat:"数学·离散组合数学", section:"2.1.5" },
-  { n:"进制转换", d:1, raw:1, level:"入门级", cat:"数学·数及其运算", section:"2.1.5" },
-  // ── 入门级核心 (大纲难度 3-4) ─────────────────────
-  { n:"冒泡排序", d:2, raw:3, level:"入门级", cat:"算法·排序算法", section:"2.1.4" },
-  { n:"选择排序", d:2, raw:3, level:"入门级", cat:"算法·排序算法", section:"2.1.4" },
-  { n:"插入排序", d:2, raw:3, level:"入门级", cat:"算法·排序算法", section:"2.1.4" },
-  { n:"计数排序", d:2, raw:3, level:"入门级", cat:"算法·排序算法", section:"2.1.4" },
-  { n:"贪心法", d:2, raw:3, level:"入门级", cat:"算法·基础算法", section:"2.1.4" },
-  { n:"递推法", d:2, raw:3, level:"入门级", cat:"算法·基础算法", section:"2.1.4" },
-  { n:"前缀和", d:2, raw:3, level:"入门级", cat:"算法·算法策略", section:"2.1.4" },
-  { n:"差分", d:2, raw:4, level:"入门级", cat:"算法·算法策略", section:"2.1.4" },
-  { n:"递归法", d:2, raw:4, level:"入门级", cat:"算法·基础算法", section:"2.1.4" },
-  { n:"二分法", d:2, raw:4, level:"入门级", cat:"算法·基础算法", section:"2.1.4" },
-  { n:"倍增法", d:2, raw:4, level:"入门级", cat:"算法·基础算法", section:"2.1.4" },
-  { n:"高精度算法", d:2, raw:4, level:"入门级", cat:"算法·数值处理算法", section:"2.1.4" },
-  { n:"链表", d:2, raw:3, level:"入门级", cat:"数据结构·线性结构", section:"2.1.3" },
-  { n:"栈", d:2, raw:3, level:"入门级", cat:"数据结构·线性结构", section:"2.1.3" },
-  { n:"队列", d:2, raw:3, level:"入门级", cat:"数据结构·线性结构", section:"2.1.3" },
-  { n:"哈夫曼树", d:2, raw:4, level:"入门级", cat:"数据结构·特殊树", section:"2.1.3" },
-  { n:"二叉搜索树", d:2, raw:4, level:"入门级", cat:"数据结构·特殊树", section:"2.1.3" },
-  { n:"二叉树遍历", d:2, raw:4, level:"入门级", cat:"数据结构·简单树", section:"2.1.3" },
-  { n:"图的邻接表/矩阵", d:2, raw:4, level:"入门级", cat:"数据结构·简单图", section:"2.1.3" },
-  { n:"辗转相除法(GCD)", d:2, raw:3, level:"入门级", cat:"数学·初等数论", section:"2.1.5" },
-  { n:"素数筛法", d:2, raw:4, level:"入门级", cat:"数学·初等数论", section:"2.1.5" },
-  { n:"排列与组合", d:2, raw:4, level:"入门级", cat:"数学·离散组合数学", section:"2.1.5" },
-  { n:"简单一维DP", d:2, raw:4, level:"入门级", cat:"算法·动态规划", section:"2.1.4" },
-  // ── 深度/广度优先搜索 (大纲 5) 跨入门/提高边界
-  { n:"深度优先搜索(DFS)", d:3, raw:5, level:"入门级→提高级", cat:"算法·搜索算法", section:"2.1.4" },
-  { n:"广度优先搜索(BFS)", d:3, raw:5, level:"入门级→提高级", cat:"算法·搜索算法", section:"2.1.4" },
-  { n:"泛洪算法(Flood Fill)", d:3, raw:5, level:"入门级→提高级", cat:"算法·图论算法", section:"2.1.4" },
-  { n:"简单背包DP", d:3, raw:5, level:"入门级→提高级", cat:"算法·动态规划", section:"2.1.4" },
-  { n:"简单区间DP", d:3, raw:5, level:"入门级→提高级", cat:"算法·动态规划", section:"2.1.4" },
-  // ── 提高级 (大纲难度 5-6) ─────────────────────────
-  { n:"归并排序", d:3, raw:5, level:"提高级", cat:"算法·排序算法", section:"2.2.4" },
-  { n:"快速排序", d:3, raw:5, level:"提高级", cat:"算法·排序算法", section:"2.2.4" },
-  { n:"桶排序", d:3, raw:5, level:"提高级", cat:"算法·排序算法", section:"2.2.4" },
-  { n:"堆排序", d:3, raw:6, level:"提高级", cat:"算法·排序算法", section:"2.2.4" },
-  { n:"基数排序", d:3, raw:6, level:"提高级", cat:"算法·排序算法", section:"2.2.4" },
-  { n:"分治算法", d:3, raw:6, level:"提高级", cat:"算法·基础算法", section:"2.2.4" },
-  { n:"离散化", d:3, raw:6, level:"提高级", cat:"算法·算法策略", section:"2.2.4" },
-  { n:"搜索剪枝优化", d:3, raw:6, level:"提高级", cat:"算法·搜索算法", section:"2.2.4" },
-  { n:"记忆化搜索", d:3, raw:6, level:"提高级", cat:"算法·搜索算法", section:"2.2.4" },
-  { n:"KMP字符串匹配", d:3, raw:6, level:"提高级", cat:"算法·字符串算法", section:"2.2.4" },
-  { n:"最小生成树", d:3, raw:6, level:"提高级", cat:"算法·图论算法", section:"2.2.4" },
-  { n:"Dijkstra最短路", d:3, raw:6, level:"提高级", cat:"算法·图论算法", section:"2.2.4" },
-  { n:"Bellman-Ford/SPFA", d:3, raw:6, level:"提高级", cat:"算法·图论算法", section:"2.2.4" },
-  { n:"Floyd-Warshall", d:3, raw:6, level:"提高级", cat:"算法·图论算法", section:"2.2.4" },
-  { n:"拓扑排序", d:3, raw:6, level:"提高级", cat:"算法·图论算法", section:"2.2.4" },
-  { n:"欧拉道路与欧拉回路", d:3, raw:6, level:"提高级", cat:"算法·图论算法", section:"2.2.4" },
-  { n:"二分图判定", d:3, raw:6, level:"提高级", cat:"算法·图论算法", section:"2.2.4" },
-  { n:"最近公共祖先(LCA)", d:3, raw:6, level:"提高级", cat:"算法·图论算法", section:"2.2.4" },
-  { n:"树状数组", d:3, raw:6, level:"提高级", cat:"数据结构·特殊树", section:"2.2.3" },
-  { n:"线段树", d:3, raw:6, level:"提高级", cat:"数据结构·特殊树", section:"2.2.3" },
-  { n:"字典树(Trie)", d:3, raw:6, level:"提高级", cat:"数据结构·特殊树", section:"2.2.3" },
-  { n:"并查集", d:3, raw:6, level:"提高级", cat:"数据结构·集合与森林", section:"2.2.3" },
-  { n:"ST表(Sparse Table)", d:3, raw:6, level:"提高级", cat:"数据结构·线性结构", section:"2.2.3" },
-  { n:"单调队列", d:3, raw:5, level:"提高级", cat:"数据结构·线性结构", section:"2.2.3" },
-  { n:"多维动态规划", d:3, raw:6, level:"提高级", cat:"算法·动态规划", section:"2.2.4" },
-  { n:"树形DP", d:3, raw:6, level:"提高级", cat:"算法·动态规划", section:"2.2.4" },
-  { n:"时间/空间复杂度分析", d:3, raw:6, level:"提高级", cat:"算法·复杂度分析", section:"2.2.4" },
-  { n:"KMP/字符串哈希", d:3, raw:6, level:"提高级", cat:"算法·字符串算法", section:"2.2.4" },
-  { n:"同余式", d:3, raw:5, level:"提高级", cat:"数学·初等数论", section:"2.2.5" },
-  { n:"矩阵乘法", d:3, raw:6, level:"提高级", cat:"数学·线性代数", section:"2.2.5" },
-  { n:"鸽巢原理/二项式定理", d:3, raw:6, level:"提高级", cat:"数学·组合数学", section:"2.2.5" },
-  // ── 提高级核心 (大纲难度 7) ──────────────────────
-  { n:"扫描线", d:4, raw:7, level:"提高级", cat:"算法·算法策略", section:"2.2.4" },
-  { n:"状态压缩DP", d:4, raw:7, level:"提高级", cat:"算法·动态规划", section:"2.2.4" },
-  { n:"Manacher算法", d:4, raw:7, level:"提高级", cat:"算法·字符串算法", section:"2.2.4" },
-  { n:"强连通分量(SCC)", d:4, raw:7, level:"提高级", cat:"算法·图论算法", section:"2.2.4" },
-  { n:"割点与割边", d:4, raw:7, level:"提高级", cat:"算法·图论算法", section:"2.2.4" },
-  { n:"单源次短路", d:4, raw:7, level:"提高级", cat:"算法·图论算法", section:"2.2.4" },
-  { n:"双连通图", d:4, raw:7, level:"提高级", cat:"数据结构·常见图", section:"2.2.3" },
-  { n:"笛卡尔树", d:4, raw:7, level:"提高级", cat:"数据结构·特殊树", section:"2.2.3" },
-  { n:"启发式搜索(A*)", d:4, raw:7, level:"提高级", cat:"算法·搜索算法", section:"2.2.4" },
-  { n:"双向BFS", d:4, raw:7, level:"提高级", cat:"算法·搜索算法", section:"2.2.4" },
-  { n:"迭代加深搜索", d:4, raw:7, level:"提高级", cat:"算法·搜索算法", section:"2.2.4" },
-  { n:"欧拉定理/欧拉函数", d:4, raw:7, level:"提高级", cat:"数学·初等数论", section:"2.2.5" },
-  { n:"中国剩余定理(CRT)", d:4, raw:7, level:"提高级", cat:"数学·初等数论", section:"2.2.5" },
-  { n:"扩展欧几里得算法", d:4, raw:7, level:"提高级", cat:"数学·初等数论", section:"2.2.5" },
-  { n:"模意义下的逆元", d:4, raw:7, level:"提高级", cat:"数学·初等数论", section:"2.2.5" },
-  { n:"容斥原理", d:4, raw:7, level:"提高级", cat:"数学·组合数学", section:"2.2.5" },
-  { n:"卡特兰数", d:4, raw:7, level:"提高级", cat:"数学·组合数学", section:"2.2.5" },
-  { n:"高斯消元法", d:4, raw:7, level:"提高级", cat:"数学·线性代数", section:"2.2.5" },
-  // ── NOI 级 (大纲难度 8-10) ────────────────────────
-  { n:"平衡树(AVL/Treap/Splay)", d:5, raw:8, level:"NOI级", cat:"数据结构·特殊树", section:"2.2.3" },
-  { n:"网络流(最大流/最小割)", d:5, raw:8, level:"NOI级", cat:"算法·图论算法", section:"2.3.3" },
-  { n:"2-SAT", d:5, raw:8, level:"NOI级", cat:"算法·图论算法", section:"2.3.3" },
-  { n:"树链剖分", d:5, raw:8, level:"NOI级", cat:"数据结构·复杂树", section:"2.3.2" },
-  { n:"虚树", d:5, raw:8, level:"NOI级", cat:"数据结构·复杂树", section:"2.3.2" },
-  { n:"可持久化线段树", d:5, raw:8, level:"NOI级", cat:"数据结构·可持久化", section:"2.3.2" },
-  { n:"左偏树", d:5, raw:8, level:"NOI级", cat:"数据结构·可合并堆", section:"2.3.2" },
-  { n:"块状链表/分块", d:5, raw:8, level:"NOI级", cat:"数据结构·线性结构", section:"2.3.2" },
-  { n:"AC自动机", d:5, raw:8, level:"NOI级", cat:"算法·字符串算法", section:"2.3.3" },
-  { n:"后缀数组(SA)", d:5, raw:8, level:"NOI级", cat:"算法·字符串算法", section:"2.3.3" },
-  { n:"扩展KMP(Z函数)", d:5, raw:8, level:"NOI级", cat:"算法·字符串算法", section:"2.3.3" },
-  { n:"基环树", d:5, raw:8, level:"NOI级", cat:"算法·图论算法", section:"2.3.3" },
-  { n:"匈牙利算法", d:5, raw:8, level:"NOI级", cat:"算法·图论算法", section:"2.3.3" },
-  { n:"DP常用优化", d:5, raw:8, level:"NOI级", cat:"算法·动态规划", section:"2.3.3" },
-  { n:"离线处理思想", d:5, raw:8, level:"NOI级", cat:"算法·算法策略", section:"2.3.3" },
-  { n:"二维凸包", d:5, raw:8, level:"NOI级", cat:"数学·计算几何", section:"2.3.4" },
-  { n:"概率基本概念", d:5, raw:8, level:"NOI级", cat:"数学·概率论", section:"2.3.4" },
-  { n:"原根与指数", d:5, raw:8, level:"NOI级", cat:"数学·初等数论", section:"2.3.4" },
-  { n:"BSGS算法", d:5, raw:8, level:"NOI级", cat:"数学·初等数论", section:"2.3.4" },
-  { n:"多项式微积分", d:5, raw:8, level:"NOI级", cat:"数学·高等数学", section:"2.3.4" },
-  { n:"动态树(LCT)", d:5, raw:10, level:"NOI级", cat:"数据结构·复杂树", section:"2.3.2" },
-  { n:"后缀自动机(SAM)", d:5, raw:10, level:"NOI级", cat:"算法·字符串算法", section:"2.3.3" },
-  { n:"FFT快速傅里叶变换", d:5, raw:10, level:"NOI级", cat:"数学·高等数学", section:"2.3.4" },
-  { n:"莫比乌斯反演", d:5, raw:9, level:"NOI级", cat:"数学·离散组合数学", section:"2.3.4" },
-  { n:"母函数(生成函数)", d:5, raw:9, level:"NOI级", cat:"数学·离散组合数学", section:"2.3.4" },
-  { n:"Nim博弈/SG函数", d:5, raw:9, level:"NOI级", cat:"数学·博弈论", section:"2.3.4" },
-  { n:"群论/Burnside/Pólya", d:5, raw:9, level:"NOI级", cat:"数学·离散组合数学", section:"2.3.4" },
-  { n:"树套树", d:5, raw:9, level:"NOI级", cat:"数据结构·复杂树", section:"2.3.2" },
-  { n:"KM算法", d:5, raw:10, level:"NOI级", cat:"算法·图论算法", section:"2.3.3" },
-  { n:"复杂DP模型构建", d:5, raw:9, level:"NOI级", cat:"算法·动态规划", section:"2.3.3" },
-  { n:"半平面交", d:5, raw:9, level:"NOI级", cat:"数学·计算几何", section:"2.3.4" },
-  { n:"狄利克雷卷积", d:5, raw:9, level:"NOI级", cat:"数学·初等数论", section:"2.3.4" },
-  { n:"最小树形图", d:5, raw:10, level:"NOI级", cat:"算法·图论算法", section:"2.3.3" },
+  // ══ 入门级基础 (大纲难度 1-2) ══════════════════════════════════════
+  {n:"枚举法", d:1, raw:"【1】", section:"2.1.4 算法·入门算法",
+   summary:"通过逐一列举所有可能的解来找到答案，是最基础的暴力搜索思路。",
+   complexity:"时间 O(n) ~ O(nᵏ)，取决于枚举维度 | 空间 O(1)",
+   syllabus:"§2.1.4 入门算法·枚举法【1】",
+   ideas:["遍历解空间中所有候选解","对每个候选解判断是否满足约束条件","通过剪枝减少不必要的枚举"],
+   problems:["百钱百鸡问题","水仙花数","找出满足条件的三元组"],
+   keywords:["暴力","穷举","解空间","剪枝"],
+   tip:"先从最简单的暴力枚举开始，理解问题结构后再考虑优化。"},
+
+  {n:"模拟法", d:1, raw:"【1】", section:"2.1.4 算法·入门算法",
+   summary:"按照题目描述的规则，直接用代码模拟操作过程，忠实还原题意。",
+   complexity:"时间 O(n·步骤数) | 空间 O(n)",
+   syllabus:"§2.1.4 入门算法·模拟法【1】",
+   ideas:["直接按题目流程一步步实现","维护操作状态（位置、计数器等）","注意边界和特殊情况处理"],
+   problems:["日期计算","报数游戏","走迷宫步骤追踪"],
+   keywords:["直接实现","状态维护","边界处理","过程模拟"],
+   tip:"模拟题的关键是读懂题意，要细心处理各种边界情形。"},
+
+  {n:"递归函数", d:1, raw:"【2】", section:"2.1.2 C++程序设计·函数与递归",
+   summary:"函数直接或间接调用自身，将大问题分解为同结构的小问题求解。",
+   complexity:"时间 O(递归树节点数) | 空间 O(递归深度)（栈空间）",
+   syllabus:"§2.1.2 函数与递归·递归函数【2】",
+   ideas:["定义递归出口（base case）避免无限递归","将原问题归约为规模更小的子问题","每次调用参数向出口方向收敛"],
+   problems:["汉诺塔","阶乘计算","斐波那契数列（递归版）","全排列生成"],
+   keywords:["递归出口","子问题","调用栈","分治思想"],
+   tip:"画出递归树帮助理解调用过程，注意栈溢出风险（深度过大时改迭代）。"},
+
+  {n:"加法/乘法原理", d:1, raw:"【2】", section:"2.1.5 数学·离散组合数学",
+   summary:"分步计数用乘法原理，分类计数用加法原理，是组合数学的计数基础。",
+   complexity:"O(1) — 公式直接计算",
+   syllabus:"§2.1.5 离散与组合数学·加法原理【2】·乘法原理【2】",
+   ideas:["加法原理：各类方案互斥时总数相加","乘法原理：各步独立时方案数相乘","复杂计数问题可逐步拆分后组合"],
+   problems:["密码方案数","路径计数","棋盘着色方案"],
+   keywords:["计数","分步","分类","组合数学基础"],
+   tip:"先判断是"分步完成"还是"分类完成"，再套对应原理。"},
+
+  {n:"进制转换", d:1, raw:"【1】", section:"2.1.5 数学·数及其运算",
+   summary:"在二进制、八进制、十进制、十六进制之间互相转换，是计算机数学基础。",
+   complexity:"O(log n)（n 为数值大小）",
+   syllabus:"§2.1.5 数及其运算·进制与进制转换【1】",
+   ideas:["十进制→其他进制：反复除以基数取余","其他进制→十进制：按位权展开求和","二进制与十六进制互转：4位一组直接映射"],
+   problems:["整数进制转换","判断某进制下的回文数"],
+   keywords:["二进制","十六进制","位权","取余"],
+   tip:"竞赛中二进制位运算与进制转换结合考查最多，要熟练掌握位运算。"},
+
+  // ══ 入门级核心 (大纲难度 3-4) ══════════════════════════════════════
+  {n:"冒泡排序", d:2, raw:"【3】", section:"2.1.4 算法·排序算法",
+   summary:"相邻元素两两比较交换，每趟将最大值"冒泡"到末尾。",
+   complexity:"时间 O(n²) | 空间 O(1)（原地）",
+   syllabus:"§2.1.4 排序算法·冒泡排序【3】",
+   ideas:["外层 n-1 趟，内层逐个比较相邻元素","若已有序可提前终止（优化版）","稳定排序（相等元素相对顺序不变）"],
+   problems:["对小规模数组排序","验证比较排序下界"],
+   keywords:["相邻比较","稳定排序","O(n²)","原地排序"],
+   tip:"理解稳定性概念；实际比赛直接用 sort()，冒泡用于理解比较排序原理。"},
+
+  {n:"选择排序", d:2, raw:"【3】", section:"2.1.4 算法·排序算法",
+   summary:"每趟从剩余元素中找最小值放到已排序区末尾，共进行 n-1 趟。",
+   complexity:"时间 O(n²) | 空间 O(1)",
+   syllabus:"§2.1.4 排序算法·选择排序【3】",
+   ideas:["维护已排序前缀和未排序后缀","每趟在未排序部分找最小值","将最小值与未排序区首元素交换"],
+   problems:["排序基础训练","与其他排序算法对比"],
+   keywords:["最小值","交换","不稳定","原地"],
+   tip:"选择排序交换次数最少（O(n) 次），但比较次数仍是 O(n²)。"},
+
+  {n:"插入排序", d:2, raw:"【3】", section:"2.1.4 算法·排序算法",
+   summary:"将未排序元素逐一插入到已排序序列的正确位置，类似整理扑克牌。",
+   complexity:"时间 O(n²)，近有序数据接近 O(n) | 空间 O(1)",
+   syllabus:"§2.1.4 排序算法·插入排序【3】",
+   ideas:["维护已排序前缀，逐步扩展","当前元素向左与已排序元素比较，找到插入位置","对小规模数据或近似有序数据高效"],
+   problems:["小数组排序","归并/快排的优化底层"],
+   keywords:["插入","稳定","近有序","O(n²)"],
+   tip:"希尔排序是插入排序的升级版；理解插入排序对理解归并排序有帮助。"},
+
+  {n:"贪心法", d:2, raw:"【3】", section:"2.1.4 算法·基础算法",
+   summary:"每步做出当前局部最优选择，以期得到全局最优解。",
+   complexity:"通常 O(n log n)（含排序）",
+   syllabus:"§2.1.4 基础算法·贪心法【3】",
+   ideas:["证明贪心选择性质（局部最优推全局最优）","将问题排序或优先队列处理","贪心策略不一定总成立，需严格证明"],
+   problems:["活动选择问题","区间调度","硬币找零（整除情形）","任务调度最小完成时间"],
+   keywords:["局部最优","全局最优","证明","活动选择"],
+   tip:"贪心最难点是证明正确性，常用"交换论证法"或数学归纳法。"},
+
+  {n:"递推法", d:2, raw:"【3】", section:"2.1.4 算法·基础算法",
+   summary:"从初始状态出发，根据递推关系逐步推导出后续状态，迭代得到答案。",
+   complexity:"时间 O(n) ~ O(n²) | 空间 O(n) 或 O(1)（滚动优化）",
+   syllabus:"§2.1.4 基础算法·递推法【3】",
+   ideas:["建立 f(n) 与 f(n-1)...f(1) 的递推关系","确定初始值（边界条件）","自底向上迭代计算避免重复"],
+   problems:["斐波那契数列","爬楼梯","矩阵快速幂加速递推"],
+   keywords:["状态转移","初始值","自底向上","迭代"],
+   tip:"递推和动态规划本质相同；递推更偏向简单线性关系，DP 更复杂。"},
+
+  {n:"前缀和", d:2, raw:"【3】", section:"2.1.4 算法·算法策略",
+   summary:"预处理数组的前缀累计和，使区间求和从 O(n) 降为 O(1)。",
+   complexity:"预处理 O(n)，查询 O(1) | 空间 O(n)",
+   syllabus:"§2.1.4 算法策略·前缀和【3】",
+   ideas:["pre[i] = pre[i-1] + a[i]","区间 [l,r] 之和 = pre[r] - pre[l-1]","可扩展至二维前缀和"],
+   problems:["区间求和查询","子数组和等于 k 的方案数","二维矩阵子矩阵求和"],
+   keywords:["区间查询","O(1)查询","差分逆操作","二维扩展"],
+   tip:"前缀和与差分互为逆操作，是竞赛中最高频的预处理技巧之一。"},
+
+  {n:"差分", d:2, raw:"【4】", section:"2.1.4 算法·算法策略",
+   summary:"对差分数组进行区间加法操作，求前缀和还原原数组，实现 O(1) 区间修改。",
+   complexity:"预处理 O(n)，单次修改 O(1)，还原 O(n) | 空间 O(n)",
+   syllabus:"§2.1.4 算法策略·差分【4】",
+   ideas:["差分数组 d[i] = a[i] - a[i-1]","[l,r]+val：d[l]+=val, d[r+1]-=val","对差分数组求前缀和得修改后原数组"],
+   problems:["区间加法修改","航班座位预订（多次区间加）","公交乘客统计"],
+   keywords:["区间修改","O(1)修改","前缀和逆操作","差分数组"],
+   tip:"差分是前缀和的逆操作；二维差分用于矩阵子矩阵批量加法。"},
+
+  {n:"递归法", d:2, raw:"【4】", section:"2.1.4 算法·基础算法",
+   summary:"将大问题拆分为若干相同结构的子问题递归求解，是分治、搜索的基础。",
+   complexity:"取决于递归树结构，常见 O(n)、O(n log n)、O(2ⁿ)",
+   syllabus:"§2.1.4 基础算法·递归法【4】",
+   ideas:["定义明确的递归终止条件","每次调用规模严格缩小","利用系统栈保存中间状态"],
+   problems:["汉诺塔","全排列","二分搜索递归版","归并排序"],
+   keywords:["递归终止","子问题","系统栈","分而治之"],
+   tip:"能用递归的地方通常也能改为迭代+显式栈，注意递归深度限制（约 1 万层）。"},
+
+  {n:"二分法", d:2, raw:"【4】", section:"2.1.4 算法·基础算法",
+   summary:"在有序区间内每次折半缩小搜索范围，以 O(log n) 定位目标。",
+   complexity:"时间 O(log n) | 空间 O(1)",
+   syllabus:"§2.1.4 基础算法·二分法【4】",
+   ideas:["维护可行区间 [lo, hi]，每次取中点判断","分清「找第一个满足条件的位置」和「找最后一个」","二分答案：对答案值域做二分，check 函数验证可行性"],
+   problems:["有序数组查找","最小化最大值","分配问题","求平方根"],
+   keywords:["有序","折半","二分答案","单调性"],
+   tip:"二分答案是提高级必考技巧，关键是构造单调的 check 函数。"},
+
+  {n:"倍增法", d:2, raw:"【4】", section:"2.1.4 算法·基础算法",
+   summary:"利用 2 的幂次预处理，将线性跳跃加速为对数跳跃，LCA 的经典基础。",
+   complexity:"预处理 O(n log n)，查询 O(log n) | 空间 O(n log n)",
+   syllabus:"§2.1.4 基础算法·倍增法【4】",
+   ideas:["预处理 fa[v][k] = 从 v 往上跳 2ᵏ 步的祖先","查询时将跳跃次数拆为二进制各位","稀疏表（ST表）也是倍增的应用"],
+   problems:["LCA（最近公共祖先）","树上路径第 k 个节点","RMQ 区间最值"],
+   keywords:["2的幂次","LCA","稀疏表","预处理"],
+   tip:"倍增是提高级 LCA 和 RMQ 的核心技术，务必掌握。"},
+
+  {n:"高精度算法", d:2, raw:"【4】", section:"2.1.4 算法·数值处理算法",
+   summary:"用数组模拟大整数的四则运算，处理超出 long long 范围的数值。",
+   complexity:"加减 O(n)，乘法 O(n²)，除法 O(nm) | 空间 O(n)",
+   syllabus:"§2.1.4 数值处理算法·高精度加法【4】减法【4】乘法【4】整除【4】",
+   ideas:["用 vector 或数组存储每一位（低位在前便于进位）","加法逐位相加处理进位","乘法模拟竖式计算","除法：高精度除以单精度（长除法）"],
+   problems:["大整数相加/相乘","阶乘精确值","斐波那契大数"],
+   keywords:["大整数","进位","竖式计算","vector存储"],
+   tip:"注意前导零的处理；Python 选手天然有大整数，C++ 需自己实现。"},
+
+  {n:"链表", d:2, raw:"【3】", section:"2.1.3 数据结构·线性结构",
+   summary:"通过指针将节点串联起来的线性结构，支持 O(1) 插入删除（已知位置）。",
+   complexity:"访问 O(n)，插入/删除（已知位置）O(1) | 空间 O(n)",
+   syllabus:"§2.1.3 线性结构·链表：单链表、双向链表、循环链表【3】",
+   ideas:["单链表：每节点含 next 指针","双向链表：含 prev 和 next，便于双向遍历","循环链表：尾节点指向头节点"],
+   problems:["链表反转","链表中点","合并有序链表","约瑟夫问题"],
+   keywords:["指针","单链表","双向链表","O(1)插入删除"],
+   tip:"竞赛中常用数组模拟链表（head[], next[] 数组），避免指针操作。"},
+
+  {n:"栈", d:2, raw:"【3】", section:"2.1.3 数据结构·线性结构",
+   summary:"后进先出（LIFO）的线性结构，支持 push/pop/top 操作，用于括号匹配、递归模拟等。",
+   complexity:"所有操作 O(1) | 空间 O(n)",
+   syllabus:"§2.1.3 线性结构·栈【3】",
+   ideas:["只在栈顶进行操作（LIFO）","可用数组或链表实现","递归调用本质上就是系统维护的栈"],
+   problems:["括号匹配","表达式求值","单调栈求下一个更大元素","函数调用模拟"],
+   keywords:["LIFO","栈顶","括号匹配","单调栈"],
+   tip:"单调栈是栈的重要应用，能在 O(n) 内求每个元素的左/右第一个更大/更小值。"},
+
+  {n:"队列", d:2, raw:"【3】", section:"2.1.3 数据结构·线性结构",
+   summary:"先进先出（FIFO）的线性结构，BFS 的核心数据结构。",
+   complexity:"所有操作 O(1) | 空间 O(n)",
+   syllabus:"§2.1.3 线性结构·队列【3】",
+   ideas:["队尾入队，队头出队（FIFO）","循环队列避免假溢出","BFS 层序遍历的标准工具"],
+   problems:["BFS 最短路","二叉树层序遍历","滑动窗口最大值（单调队列）"],
+   keywords:["FIFO","BFS","循环队列","单调队列"],
+   tip:"deque（双端队列）是队列升级版，可在两端操作，用于单调队列优化DP。"},
+
+  {n:"二叉树遍历", d:2, raw:"【4】", section:"2.1.3 数据结构·简单树",
+   summary:"用前序、中序、后序三种方式递归访问二叉树所有节点。",
+   complexity:"时间 O(n) | 空间 O(树高)（递归栈）",
+   syllabus:"§2.1.3 简单树·二叉树的遍历：前序、中序、后序【4】",
+   ideas:["前序（根→左→右）：常用于序列化、复制树","中序（左→根→右）：BST 中序得升序序列","后序（左→右→根）：常用于释放内存、计算子树信息"],
+   problems:["由前序+中序还原二叉树","BST 验证","二叉树序列化与反序列化"],
+   keywords:["前序","中序","后序","递归遍历"],
+   tip:"理解三种遍历顺序，并能用迭代（显式栈）代替递归实现。"},
+
+  {n:"二叉搜索树(BST)", d:2, raw:"【4】", section:"2.1.3 数据结构·特殊树",
+   summary:"左子树所有值 < 根 < 右子树所有值，支持 O(h) 的查找插入删除。",
+   complexity:"平均 O(log n)，最坏 O(n)（退化为链表）",
+   syllabus:"§2.1.3 特殊树·二叉搜索树的定义和构造【4】",
+   ideas:["中序遍历 BST 得到升序序列","查找：根据大小关系向左/右子树递归","插入/删除：维护 BST 性质","退化时需平衡（AVL/Treap 等）"],
+   problems:["第 k 小元素","区间内元素统计","有序数据动态维护"],
+   keywords:["左小右大","中序升序","查找树","平衡二叉树"],
+   tip:"BST 退化问题是提高级平衡树（Treap/Splay）的引入动机。"},
+
+  {n:"哈夫曼树", d:2, raw:"【4】", section:"2.1.3 数据结构·特殊树",
+   summary:"权值最小的最优二叉树，贪心构造，用于哈夫曼编码实现最优压缩。",
+   complexity:"构造 O(n log n)（优先队列）",
+   syllabus:"§2.1.3 特殊树·哈夫曼树的定义和构造、哈夫曼编码【4】",
+   ideas:["每次合并权值最小的两棵树（贪心）","叶节点为字符，路径长度为编码长度","前缀码性质：任意编码不是其他编码的前缀"],
+   problems:["文件最优压缩编码","带权路径长度最小化"],
+   keywords:["最优二叉树","前缀码","贪心","优先队列"],
+   tip:"哈夫曼编码是贪心算法的经典应用，理解最优子结构是关键。"},
+
+  {n:"图的邻接表/矩阵", d:2, raw:"【4】", section:"2.1.3 数据结构·简单图",
+   summary:"图的两种主要存储方式：邻接矩阵适合稠密图，邻接表适合稀疏图。",
+   complexity:"邻接矩阵 O(V²)空间，邻接表 O(V+E)空间",
+   syllabus:"§2.1.3 简单图·邻接矩阵【4】·邻接表【4】",
+   ideas:["邻接矩阵：g[u][v]=权重，O(1)判断边是否存在","邻接表：每个顶点存其邻居列表，遍历高效","前向星（数组模拟邻接表）是竞赛中最常用实现"],
+   problems:["图的遍历（DFS/BFS）","最短路","最小生成树"],
+   keywords:["邻接矩阵","邻接表","前向星","稀疏图/稠密图"],
+   tip:"竞赛中优先用链式前向星（数组模拟），比 vector<vector> 更快。"},
+
+  {n:"辗转相除法(GCD)", d:2, raw:"【3】", section:"2.1.5 数学·初等数论",
+   summary:"欧几里得算法：gcd(a,b)=gcd(b,a%b)，高效求最大公约数。",
+   complexity:"时间 O(log(min(a,b))) | 空间 O(1)",
+   syllabus:"§2.1.5 初等数论·辗转相除法（欧几里得算法）【3】",
+   ideas:["核心递推：gcd(a,b) = gcd(b, a mod b)","终止条件：gcd(a, 0) = a","lcm(a,b) = a/gcd(a,b)*b（防溢出先除后乘）"],
+   problems:["最大公约数/最小公倍数","分数化简","裴蜀定理应用"],
+   keywords:["GCD","LCM","欧几里得","取余递推"],
+   tip:"扩展欧几里得（exgcd）可求 ax+by=gcd(a,b) 的整数解，是提高级数论基础。"},
+
+  {n:"素数筛法", d:2, raw:"【4】", section:"2.1.5 数学·初等数论",
+   summary:"埃氏筛或线性筛在 O(n log log n) / O(n) 内筛出 n 以内所有素数。",
+   complexity:"埃氏筛 O(n log log n)，线性筛 O(n) | 空间 O(n)",
+   syllabus:"§2.1.5 初等数论·素数筛法：埃氏筛法与线性筛法【4】",
+   ideas:["埃氏筛：从2开始，逐步划掉倍数","线性筛：每个合数只被最小质因子筛一次","线性筛同时可求欧拉函数、莫比乌斯函数"],
+   problems:["统计 n 以内素数个数","分解质因数","哥德巴赫猜想验证"],
+   keywords:["埃氏筛","线性筛","质数","合数筛除"],
+   tip:"线性筛是提高级数论的基础，同时能维护积性函数值。"},
+
+  {n:"排列与组合", d:2, raw:"【4】", section:"2.1.5 数学·离散组合数学",
+   summary:"排列 P(n,m) 和组合 C(n,m) 是计数的核心工具，与杨辉三角密切相关。",
+   complexity:"直接公式 O(m)；预处理阶乘 O(n) 后 O(1) 查询",
+   syllabus:"§2.1.5 离散与组合数学·排列【4】·组合【4】·杨辉三角【4】",
+   ideas:["P(n,m) = n!/(n-m)!：有顺序的选法","C(n,m) = n!/(m!(n-m)!)：无顺序的选法","杨辉三角：C(n,m)=C(n-1,m-1)+C(n-1,m)","模意义下需用逆元计算"],
+   problems:["方案计数","概率计算","二项式展开系数"],
+   keywords:["阶乘","组合数","杨辉三角","Lucas定理"],
+   tip:"大数组合数取模需用 Lucas 定理或预处理逆元，提高级必备。"},
+
+  {n:"简单一维DP", d:2, raw:"【4】", section:"2.1.4 算法·动态规划",
+   summary:"动态规划基础：定义一维状态，建立状态转移方程，自底向上填表。",
+   complexity:"时间 O(n) ~ O(n²) | 空间 O(n)（可滚动优化为 O(1)）",
+   syllabus:"§2.1.4 动态规划·动态规划基本思路【4】·简单一维DP【4】",
+   ideas:["定义 dp[i] 的含义（最优子结构）","写出 dp[i] 与前状态的转移关系","确定初始值和计算顺序"],
+   problems:["最长递增子序列(LIS)","最大子数组和","爬楼梯","编辑距离（入门版）"],
+   keywords:["状态","转移方程","无后效性","滚动数组"],
+   tip:"DP 三要素：状态定义、转移方程、初始化。状态定义是最难也最重要的一步。"},
+
+  // ══ 深度/广度优先搜索（大纲难度 5，入门→提高过渡）══════════════
+  {n:"深度优先搜索(DFS)", d:3, raw:"【5】", section:"2.1.4 算法·搜索算法",
+   summary:"沿一条路径尽可能深入，回溯后换方向，是图/树遍历与回溯搜索的基础。",
+   complexity:"时间 O(V+E)（图遍历）；回溯最坏 O(状态空间大小)",
+   syllabus:"§2.1.4 搜索算法·深度优先搜索【5】",
+   ideas:["递归实现或显式栈","标记已访问节点防止重复","回溯时撤销选择（回溯法）","剪枝减少无效搜索"],
+   problems:["迷宫求解","全排列生成","N皇后","连通分量统计"],
+   keywords:["递归","回溯","剪枝","访问标记"],
+   tip:"DFS + 回溯 + 剪枝是搜索题的黄金组合，剪枝力度决定能否通过时限。"},
+
+  {n:"广度优先搜索(BFS)", d:3, raw:"【5】", section:"2.1.4 算法·搜索算法",
+   summary:"按层级展开搜索，队列实现，保证找到无权图中的最短路径。",
+   complexity:"时间 O(V+E) | 空间 O(V)（队列最大层宽）",
+   syllabus:"§2.1.4 搜索算法·广度优先搜索【5】",
+   ideas:["用队列维护待访问节点","按距离（层数）由近到远展开","适用于求最短步数/最少操作次数"],
+   problems:["迷宫最短路","单词接龙","拓扑排序（Kahn算法）","最少转换步骤"],
+   keywords:["队列","最短路","层序","无权图"],
+   tip:"BFS 找最短路的前提是「每步代价相同」；带权图用 Dijkstra。"},
+
+  {n:"泛洪算法(Flood Fill)", d:3, raw:"【5】", section:"2.1.4 算法·图论算法",
+   summary:"从种子点出发，用 DFS/BFS 将网格中相邻同色区域全部标记，即「油漆桶」算法。",
+   complexity:"时间 O(V+E)（V=格子数）| 空间 O(V)",
+   syllabus:"§2.1.4 图论算法·泛洪算法（Flood Fill）【5】",
+   ideas:["以起点为根做 DFS/BFS","对四连通或八连通邻格进行扩展","标记访问，统计区域大小/数量"],
+   problems:["岛屿数量","地图着色","围棋气计算","图像区域填充"],
+   keywords:["连通区域","四连通","种子扩展","网格图"],
+   tip:"Flood Fill 是网格图 DFS/BFS 的模板，注意越界判断和访问标记。"},
+
+  {n:"简单背包DP", d:3, raw:"【5】", section:"2.1.4 算法·动态规划",
+   summary:"经典DP模型：从物品中选择放入容量有限的背包，最大化总价值。",
+   complexity:"0/1背包 O(nW)，完全背包 O(nW)，多重背包 O(nW log k) | 空间 O(W)（滚动）",
+   syllabus:"§2.1.4 动态规划·简单背包类型动态规划【5】",
+   ideas:["0/1背包：每件物品最多选一次","完全背包：每件物品可选无限次","dp[j] 倒序（0/1）或正序（完全）遍历","分组背包：每组最多选一件"],
+   problems:["经典0/1背包","硬币凑总价","分割等和子集"],
+   keywords:["0/1背包","完全背包","容量","价值"],
+   tip:"背包是DP中最系统的专题，从一维到多维都有变体，务必吃透。"},
+
+  {n:"简单区间DP", d:3, raw:"【5】", section:"2.1.4 算法·动态规划",
+   summary:"在区间上定义状态，枚举分割点进行状态转移，解决区间合并/分割最优化问题。",
+   complexity:"时间 O(n³)，部分优化可达 O(n² log n) | 空间 O(n²)",
+   syllabus:"§2.1.4 动态规划·简单区间类型动态规划【5】",
+   ideas:["dp[l][r] 表示区间 [l,r] 的最优解","枚举分割点 k：dp[l][r] = opt(dp[l][k]+dp[k+1][r]+cost)","按区间长度从小到大填表"],
+   problems:["矩阵链乘法","石子合并","括号分值","最优三角剖分"],
+   keywords:["区间","分割点","O(n³)","枚举中点"],
+   tip:"区间DP的关键是「按长度枚举区间」，注意计算顺序（先短后长）。"},
+
+  // ══ 提高级基础 (大纲难度 5-6) ══════════════════════════════════════
+  {n:"归并排序", d:3, raw:"【5】", section:"2.2.4 算法·排序算法",
+   summary:"分治思想：将序列递归二分，再有序合并，稳定且时间恒为 O(n log n)。",
+   complexity:"时间 O(n log n)（最好/最坏/平均）| 空间 O(n)（合并时辅助数组）",
+   syllabus:"§2.2.4 排序算法·归并排序【5】",
+   ideas:["递归拆分到长度1，再逐层合并","合并操作：双指针比较两段，选小者放入","可在合并时统计逆序对（分治应用）"],
+   problems:["逆序对计数","外部排序基础","合并 k 个有序链表"],
+   keywords:["分治","稳定排序","逆序对","O(n log n)"],
+   tip:"归并排序是分治的标准模板，逆序对问题是其经典应用，高频考点。"},
+
+  {n:"快速排序", d:3, raw:"【5】", section:"2.2.4 算法·排序算法",
+   summary:"随机选主元分区，平均 O(n log n) 完成排序，实践中最快的比较排序。",
+   complexity:"平均 O(n log n)，最坏 O(n²) | 空间 O(log n)（递归栈）",
+   syllabus:"§2.2.4 排序算法·快速排序【5】",
+   ideas:["选主元（pivot），将序列分为「≤主元」和「>主元」两部分","递归排序两部分","随机化主元避免最坏情况","三路快排处理大量重复元素"],
+   problems:["第 k 小/大元素（快速选择）","原地排序"],
+   keywords:["主元","分区","随机化","不稳定排序"],
+   tip:"快速选择（nth_element）可在 O(n) 期望时间找第 k 小元素，竞赛常用。"},
+
+  {n:"桶排序", d:3, raw:"【5】", section:"2.2.4 算法·排序算法",
+   summary:"将数据分入有限个桶，每桶内排序后合并，可在 O(n+k) 内完成排序。",
+   complexity:"时间 O(n+k)（k 为桶数）| 空间 O(n+k)",
+   syllabus:"§2.2.4 排序算法·桶排序【5】",
+   ideas:["将元素映射到对应桶中（哈希或区间划分）","每个桶内用插入排序或递归处理","合并各桶得到有序序列"],
+   problems:["对浮点数排序","数据范围有限的整数排序"],
+   keywords:["非比较排序","线性时间","桶划分","均匀分布"],
+   tip:"桶排序在数据均匀分布时表现最好；计数排序是桶排序的特例（桶大小为1）。"},
+
+  {n:"分治算法", d:3, raw:"【6】", section:"2.2.4 算法·基础算法",
+   summary:"将问题分解为若干子问题，分别求解后合并，典型复杂度 O(n log n)。",
+   complexity:"由主定理（Master Theorem）分析，常见 O(n log n)、O(n log²n)",
+   syllabus:"§2.2.4 基础算法·分治算法【6】",
+   ideas:["分：将问题拆为规模更小的子问题","治：递归求解子问题","合：合并子问题结果","CDQ 分治、点分治是高级应用"],
+   problems:["归并排序","快速幂","最近点对","大整数乘法（Karatsuba）"],
+   keywords:["递归","主定理","合并","CDQ分治"],
+   tip:"分治的合并步骤通常是复杂度的关键；CDQ 分治是提高/NOI 的重要技巧。"},
+
+  {n:"离散化", d:3, raw:"【6】", section:"2.2.4 算法·算法策略",
+   summary:"将值域大但数量少的数据映射到连续小整数，便于用数组/线段树等处理。",
+   complexity:"O(n log n)（排序去重）| 空间 O(n)",
+   syllabus:"§2.2.4 算法策略·离散化【6】",
+   ideas:["排序 + 去重得到离散化映射表","用 lower_bound 将原值映射到 rank","适用于值域大（如 10⁹）但数量少（10⁵）的场景"],
+   problems:["坐标压缩（线段树/树状数组）","区间覆盖统计","逆序对"],
+   keywords:["坐标压缩","映射","lower_bound","值域缩减"],
+   tip:"离散化是树状数组/线段树处理大值域数据的前置技巧，几乎必用。"},
+
+  {n:"KMP字符串匹配", d:3, raw:"【6】", section:"2.2.4 算法·字符串算法",
+   summary:"利用失配函数（next数组）避免回溯，在 O(n+m) 内完成字符串匹配。",
+   complexity:"时间 O(n+m)（n 为文本长，m 为模式长）| 空间 O(m)",
+   syllabus:"§2.2.4 字符串算法·字符串匹配：KMP算法【6】",
+   ideas:["构造 fail（next）数组：最长公共前后缀长度","匹配失败时利用 fail 数组跳过已匹配部分","KMP 自动机：状态转移表加速多次匹配"],
+   problems:["字符串查找","周期字符串判断","字符串压缩"],
+   keywords:["fail数组","前后缀","O(n+m)","自动机"],
+   tip:"KMP 的 fail 数组理解是难点；AC 自动机是 KMP 在多模式串上的扩展。"},
+
+  {n:"最小生成树", d:3, raw:"【6】", section:"2.2.4 算法·图论算法",
+   summary:"在连通无向带权图中找权值和最小的生成树，Kruskal 和 Prim 是两大经典算法。",
+   complexity:"Kruskal O(E log E)，Prim（堆优化）O(E log V) | 空间 O(V+E)",
+   syllabus:"§2.2.4 图论算法·最小生成树：Prim和Kruskal等算法【6】",
+   ideas:["Kruskal：按边权排序，贪心选不成环的边（并查集判环）","Prim：从任意点出发，每次选离已选集最近的点","两者等价，稀疏图用 Kruskal，稠密图用 Prim"],
+   problems:["修路问题","网络连接","次小生成树","最小瓶颈路"],
+   keywords:["Kruskal","Prim","并查集","切割性质"],
+   tip:"Kruskal 用并查集检测环，是贪心+并查集的经典结合，务必掌握。"},
+
+  {n:"Dijkstra最短路", d:3, raw:"【6】", section:"2.2.4 算法·图论算法",
+   summary:"贪心策略求单源最短路，适用于非负权图，堆优化后 O(E log V)。",
+   complexity:"朴素 O(V²)，堆优化 O(E log V) | 空间 O(V+E)",
+   syllabus:"§2.2.4 图论算法·单源最短路：Bellman-Ford、Dijkstra、SPFA等算法【6】",
+   ideas:["维护距离数组 dist[]，初始化源点为0其余为∞","每次取未确定中 dist 最小的点松弛其出边","优先队列（最小堆）优化取最小点的操作"],
+   problems:["城市最短路","地图导航","最短路计数","次短路"],
+   keywords:["贪心","非负权","优先队列","松弛"],
+   tip:"Dijkstra 不能处理负权边；负权用 Bellman-Ford 或 SPFA（注意 SPFA 最坏 O(VE)）。"},
+
+  {n:"Floyd-Warshall", d:3, raw:"【6】", section:"2.2.4 算法·图论算法",
+   summary:"动态规划求所有点对最短路，允许负权边（无负权环），O(V³)。",
+   complexity:"时间 O(V³) | 空间 O(V²)",
+   syllabus:"§2.2.4 图论算法·Floyd-Warshall算法【6】",
+   ideas:["dp[k][i][j]：只经过前 k 个节点的 i→j 最短路","滚动到二维：每轮用节点 k 更新所有 (i,j)","三层循环：k 在最外层","可用于传递闭包（可达性判断）"],
+   problems:["城市间多对多最短路","传递闭包","负环检测"],
+   keywords:["全对最短路","动态规划","传递闭包","负权"],
+   tip:"V≤500 时可用 Floyd；规模更大需对每个源点跑 Dijkstra/SPFA。"},
+
+  {n:"拓扑排序", d:3, raw:"【6】", section:"2.2.4 算法·图论算法",
+   summary:"对有向无环图（DAG）的节点排序，使每条边方向都从前指向后。",
+   complexity:"Kahn算法 O(V+E) | 空间 O(V+E)",
+   syllabus:"§2.2.4 图论算法·有向无环图的拓扑排序【6】",
+   ideas:["Kahn算法：维护入度为0的队列，逐步去边","DFS后序逆序也可得到拓扑序","若排序节点数 < V，则图中有环"],
+   problems:["任务依赖调度","课程先修关系","DAG 上的最长路","判断有向图是否有环"],
+   keywords:["DAG","入度","Kahn算法","有向无环图"],
+   tip:"拓扑排序是 DAG DP（如最长路）的前提，竞赛中结合 DP 高频考查。"},
+
+  {n:"欧拉道路与欧拉回路", d:3, raw:"【6】", section:"2.2.4 算法·图论算法",
+   summary:"欧拉路/欧拉回路是经过图中每条边恰好一次的路径/回路，用度数条件判断存在性。",
+   complexity:"Hierholzer 算法 O(V+E) | 空间 O(V+E)",
+   syllabus:"§2.2.4 图论算法·欧拉道路和欧拉回路【6】",
+   ideas:["无向图欧拉回路：所有顶点偶数度且连通","无向图欧拉路：恰好2个奇度顶点","有向图：每点入度=出度（回路）或至多2点差1","Hierholzer 算法构造路径"],
+   problems:["一笔画问题","中国邮递员问题","字符串拼接（欧拉图建模）"],
+   keywords:["度数条件","一笔画","Hierholzer","哈密顿路区别"],
+   tip:"欧拉路只看度数，哈密顿路是 NP 难问题，两者经常被混淆。"},
+
+  {n:"树状数组(BIT)", d:3, raw:"【6】", section:"2.2.3 数据结构·特殊树",
+   summary:"利用二进制低位（lowbit）维护前缀和，支持 O(log n) 的点修改和前缀查询。",
+   complexity:"修改/查询均 O(log n) | 空间 O(n)",
+   syllabus:"§2.2.3 特殊树·树状数组【6】",
+   ideas:["bit[i] 维护 i-lowbit(i)+1 到 i 的区间和","lowbit(i) = i & (-i)","点修改：往上传播；前缀查询：往下跳","可扩展到区间修改（差分+树状数组）"],
+   problems:["动态前缀和","逆序对","区间修改点查询","二维树状数组"],
+   keywords:["lowbit","前缀和","O(log n)","二进制分组"],
+   tip:"树状数组代码极简但功能强大，优先于线段树用于纯前缀和/单点更新场景。"},
+
+  {n:"线段树", d:3, raw:"【6】", section:"2.2.3 数据结构·特殊树",
+   summary:"完全二叉树结构，支持 O(log n) 的区间修改与区间查询，是最通用的区间数据结构。",
+   complexity:"建树 O(n)，修改/查询 O(log n) | 空间 O(4n)",
+   syllabus:"§2.2.3 特殊树·线段树【6】",
+   ideas:["每个节点维护区间聚合值（和/最值等）","懒标记（lazy tag）延迟区间修改","区间查询：递归合并覆盖区间的答案","可持久化线段树保存历史版本"],
+   problems:["区间求和/最值","区间加法","区间染色","动态排名（权值线段树）"],
+   keywords:["懒标记","区间查询","完全二叉树","持久化"],
+   tip:"懒标记下传是线段树的核心难点；权值线段树可用于求第 k 小/大。"},
+
+  {n:"字典树(Trie)", d:3, raw:"【6】", section:"2.2.3 数据结构·特殊树",
+   summary:"多叉树存储字符串集合，共享公共前缀，支持 O(|s|) 的插入、查找、前缀匹配。",
+   complexity:"插入/查询 O(|s|) | 空间 O(∑|s| × Σ)，Σ为字符集大小",
+   syllabus:"§2.2.3 特殊树·字典树（Trie）【6】",
+   ideas:["每条边代表一个字符，从根到叶是一个字符串","节点标记是否为某字符串的结尾","01-Trie：存二进制，用于异或最值"],
+   problems:["字符串集合查找","最长公共前缀","异或最大值（01-Trie）"],
+   keywords:["前缀","共享公共前缀","01-Trie","字符串集合"],
+   tip:"01-Trie 是位运算类DP题的利器，能在 O(n·30) 内求序列异或最大值。"},
+
+  {n:"并查集", d:3, raw:"【6】", section:"2.2.3 数据结构·集合与森林",
+   summary:"高效维护元素集合的合并与查询，路径压缩+按秩合并后几乎 O(1)。",
+   complexity:"单次操作均摊 O(α(n)) ≈ O(1) | 空间 O(n)",
+   syllabus:"§2.2.3 集合与森林·并查集【6】",
+   ideas:["find(x)：路径压缩找根（递归/迭代）","union(x,y)：按秩/大小合并两棵树","可扩展：带权并查集、种类并查集"],
+   problems:["连通分量统计","Kruskal判环","种类图（食物链）","动态连通性"],
+   keywords:["路径压缩","按秩合并","α(n)","连通性"],
+   tip:"带权并查集（维护节点到根的边权）可解决「关系传递」类问题。"},
+
+  {n:"ST表(Sparse Table)", d:3, raw:"【6】", section:"2.2.3 数据结构·线性结构",
+   summary:"倍增预处理，支持 O(1) 在线区间 RMQ（最值查询），但不支持修改。",
+   complexity:"预处理 O(n log n)，查询 O(1) | 空间 O(n log n)",
+   syllabus:"§2.2.3 线性结构·ST表（Sparse Table）【6】",
+   ideas:["st[i][j] = 从 i 开始长度 2ʲ 的区间最值","查询 [l,r]：选 k=log₂(r-l+1)，合并 [l,l+2ᵏ-1] 和 [r-2ᵏ+1,r]","利用最值的幂等性，两区间可重叠"],
+   problems:["区间最值查询（RMQ）","LCA（二叉提升）辅助","任意区间最大值"],
+   keywords:["RMQ","幂等性","O(1)查询","倍增预处理"],
+   tip:"ST表适合「多次查询、不修改」场景；有修改则改用线段树。"},
+
+  {n:"单调队列", d:3, raw:"【5】", section:"2.2.3 数据结构·线性结构",
+   summary:"双端队列维护单调性，在 O(n) 内解决滑动窗口最值，是DP优化常用工具。",
+   complexity:"时间 O(n)（每元素进出各一次）| 空间 O(k)（k 为窗口大小）",
+   syllabus:"§2.2.3 线性结构·单调队列【5】",
+   ideas:["维护队列单调递增/减","加入新元素时从队尾弹出违反单调性的元素","队头为当前窗口最小/最大值","窗口超界时弹出队头"],
+   problems:["滑动窗口最大/最小值","单调队列优化背包DP","绝对值不超过k的最大子数组和"],
+   keywords:["双端队列","滑动窗口","O(n)","DP优化"],
+   tip:"单调队列优化DP：将 O(n²) 的区间转移优化到 O(n)，高频考点。"},
+
+  {n:"多维动态规划", d:3, raw:"【6】", section:"2.2.4 算法·动态规划",
+   summary:"状态由多个维度描述，转移方程涉及多维状态，常见有二维DP和树上DP前置。",
+   complexity:"视维度和值域而定，常见 O(n²)、O(n²W) | 空间可滚动优化",
+   syllabus:"§2.2.4 动态规划·多维动态规划【6】",
+   ideas:["状态用多元组描述，如 dp[i][j][k]","转移方程枚举各维度的来源","注意计算顺序保证转移依赖已计算","空间优化：滚动数组压缩维度"],
+   problems:["最长公共子序列(LCS)","编辑距离","矩阵DP（数字三角形）","二维背包"],
+   keywords:["多维状态","LCS","滚动数组","编辑距离"],
+   tip:"多维DP的时间复杂度是各维度大小之积，注意控制维度规模。"},
+
+  {n:"树形DP", d:3, raw:"【6】", section:"2.2.4 算法·动态规划",
+   summary:"在树上进行动态规划，以节点为状态，通过子树信息自底向上推导。",
+   complexity:"时间 O(n) ~ O(n²)（树上背包）| 空间 O(n·状态数)",
+   syllabus:"§2.2.4 动态规划·树形动态规划【6】",
+   ideas:["dfs 后序处理：先处理子树，再更新父节点","dp[v][0/1]：当前节点选/不选的最优值","树上背包：合并子树时枚举子树大小，O(n²)","换根DP：二次 dfs 处理以每个节点为根的情形"],
+   problems:["树的最大独立集","树的最大匹配","二叉苹果树","树的直径（DP版）"],
+   keywords:["后序遍历","子树","换根DP","树上背包"],
+   tip:"树上背包（合并子树背包）的复杂度是 O(n²) 而非 O(n·V²），需理解证明。"},
+
+  {n:"时间/空间复杂度分析", d:3, raw:"【6】", section:"2.2.4 算法·复杂度分析",
+   summary:"用大 O 表示法描述算法运行时间和空间占用与输入规模的增长关系。",
+   complexity:"—（方法论，非算法）",
+   syllabus:"§2.2.4 复杂度分析·时间复杂度分析【6】·空间复杂度分析【6】",
+   ideas:["忽略常数和低阶项，关注最高阶","主定理（Master Theorem）分析递归算法","摊还分析（势能/账户法）处理均摊复杂度","双指针/单调队列等 O(n) 复杂度的直觉判断"],
+   problems:["分析各类排序算法复杂度","递推算法的主定理应用"],
+   keywords:["大O记法","主定理","摊还分析","渐进复杂度"],
+   tip:"参赛时要根据数据规模（n≤10⁵ → O(n log n)，n≤10³ → O(n³)）反推所需算法复杂度。"},
+
+  {n:"最近公共祖先(LCA)", d:3, raw:"【6】", section:"2.2.4 算法·图论算法",
+   summary:"树上两节点的最近公共祖先，倍增/Tarjan/欧拉序+RMQ 是三种经典求法。",
+   complexity:"倍增：预处理 O(n log n)，查询 O(log n) | 空间 O(n log n)",
+   syllabus:"§2.2.4 图论算法·最近公共祖先【6】",
+   ideas:["倍增：预处理 anc[v][k] = 往上跳 2ᵏ 的祖先，查询时对齐深度再跳","Tarjan 离线：DFS + 并查集，O(n+q)","欧拉序 + ST 表：转化为 RMQ，O(1) 在线查询"],
+   problems:["树上路径长度","树上差分","路径最大边权","LCA 建图"],
+   keywords:["倍增","Tarjan离线","欧拉序","RMQ"],
+   tip:"LCA 与树上差分结合可解决「路径修改点查询」问题，是树题的核心工具。"},
+
+  {n:"二分图判定", d:3, raw:"【6】", section:"2.2.4 算法·图论算法",
+   summary:"判断图是否为二部图（可2着色），等价于图中无奇数环，用 BFS/DFS 染色验证。",
+   complexity:"时间 O(V+E) | 空间 O(V)",
+   syllabus:"§2.2.4 图论算法·二分图的判定【6】",
+   ideas:["用 BFS/DFS 对节点 2 着色","若某边两端同色则非二分图","二分图最大匹配：匈牙利算法 O(VE)","二分图最大权匹配：KM 算法"],
+   problems:["棋盘黑白染色","任务分配问题","最小顶点覆盖（König定理）"],
+   keywords:["2染色","无奇数环","最大匹配","匈牙利算法"],
+   tip:"König 定理：二分图最大匹配数 = 最小顶点覆盖数，常用于转化问题。"},
+
+  {n:"同余式", d:3, raw:"【5】", section:"2.2.5 数学·初等数论",
+   summary:"a≡b(mod m) 表示 a 和 b 被 m 除余数相同，是模运算的基础理论框架。",
+   complexity:"O(1) per operation",
+   syllabus:"§2.2.5 初等数论·同余式【5】",
+   ideas:["同余关系是等价关系（自反/对称/传递）","加减乘均对模运算封闭","费马小定理：a^(p-1)≡1(mod p)（p为质数，gcd(a,p)=1）"],
+   problems:["模幂运算","大数取模","哈希冲突处理"],
+   keywords:["模运算","等价类","费马小定理","剩余类"],
+   tip:"模运算是数论DP和哈希的基础，要熟练掌握各运算法则。"},
+
+  {n:"矩阵乘法", d:3, raw:"【6】", section:"2.2.5 数学·线性代数",
+   summary:"矩阵乘法结合快速幂可将线性递推加速到 O(k³ log n)，是处理递推的利器。",
+   complexity:"单次 k×k 矩阵乘 O(k³)；矩阵快速幂 O(k³ log n)",
+   syllabus:"§2.2.5 线性代数·矩阵的运算：加减法、乘法与转置【6】",
+   ideas:["将线性递推表示为矩阵乘法形式","矩阵快速幂：类比整数快速幂","转移矩阵的 n 次幂对应 n 步状态转移"],
+   problems:["斐波那契第 n 项（大 n）","线性递推加速","图中路径计数","状态机DP加速"],
+   keywords:["快速幂","线性递推","转移矩阵","O(k³ log n)"],
+   tip:"构造转移矩阵是难点；k=2 时即为斐波那契加速，k 更大时处理复杂递推。"},
+
+  {n:"鸽巢原理/二项式定理", d:3, raw:"【6】", section:"2.2.5 数学·组合数学",
+   summary:"鸽巢原理：n+1 个物品放 n 个箱子必有重复；二项式定理展开 (a+b)ⁿ 的系数为组合数。",
+   complexity:"O(1)（公式/论证）",
+   syllabus:"§2.2.5 离散与组合数学·鸽巢原理【6】·二项式定理【6】",
+   ideas:["鸽巢原理：存在性论证，证明必存在某种重复/碰撞","二项式定理：(a+b)ⁿ = ΣC(n,k)aᵏbⁿ⁻ᵏ","二者常用于组合计数和存在性证明"],
+   problems:["证明存在重复子串","组合恒等式","多项式展开系数"],
+   keywords:["鸽巢","存在性","二项式系数","组合恒等式"],
+   tip:"鸽巢原理在竞赛中常用于证明题，证明某种情况必然发生。"},
+
+  // ══ 提高级核心 (大纲难度 7) ══════════════════════════════════════
+  {n:"扫描线", d:4, raw:"【7】", section:"2.2.4 算法·算法策略",
+   summary:"将二维问题转化为一维问题，用线段树/树状数组维护扫描过程中的状态。",
+   complexity:"O(n log n)（含排序和数据结构操作）",
+   syllabus:"§2.2.4 算法策略·扫描线【7】",
+   ideas:["将所有事件（端点/矩形边）排序后依次处理","用线段树维护当前扫描线的覆盖情况","矩形面积并：上下边打+1/-1标记"],
+   problems:["矩形面积并","矩形周长并","线段覆盖长度","天际线问题"],
+   keywords:["事件排序","线段树维护","矩形面积并","坐标变换"],
+   tip:"扫描线将空间问题降维，配合线段树是计算几何类DP的经典框架。"},
+
+  {n:"状态压缩DP", d:4, raw:"【7】", section:"2.2.4 算法·动态规划",
+   summary:"用二进制数表示集合状态，通过位运算枚举子集，处理小规模NP类问题。",
+   complexity:"时间 O(2ⁿ·n) ~ O(3ⁿ)（枚举子集）| 空间 O(2ⁿ·n)",
+   syllabus:"§2.2.4 动态规划·状态压缩动态规划【7】",
+   ideas:["用整数的二进制位表示元素的选取状态","枚举所有 2ⁿ 个状态和可行转移","子集枚举：for(s=mask; s>0; s=(s-1)&mask)","经典：TSP（旅行商）、插头DP"],
+   problems:["旅行商问题（TSP）","最短哈密顿路径","棋盘放置问题","集合划分"],
+   keywords:["二进制状态","位运算","子集枚举","TSP"],
+   tip:"n≤20 时状压DP可行；枚举子集技巧（(s-1)&mask）要熟练掌握。"},
+
+  {n:"Manacher算法", d:4, raw:"【7】", section:"2.2.4 算法·字符串算法",
+   summary:"在 O(n) 内求字符串所有位置的最长回文半径，利用已计算结果避免重复。",
+   complexity:"时间 O(n) | 空间 O(n)",
+   syllabus:"§2.2.4 字符串算法·Manacher算法【7】",
+   ideas:["插入分隔符使奇偶长度统一处理","利用当前最右回文的对称性初始化新中心的半径","超出边界时暴力扩展并更新最右回文"],
+   problems:["最长回文子串","回文子串计数","最短回文添加"],
+   keywords:["最长回文","O(n)","对称利用","分隔符"],
+   tip:"Manacher 是竞赛中回文题的标配，与哈希+二分（O(n log n)）相比更优。"},
+
+  {n:"强连通分量(SCC)", d:4, raw:"【7】", section:"2.2.4 算法·图论算法",
+   summary:"有向图中任意两点互相可达的最大子图，Tarjan/Kosaraju 算法 O(V+E) 求解。",
+   complexity:"O(V+E)（Tarjan 单次 DFS）| 空间 O(V)",
+   syllabus:"§2.2.4 图论算法·强连通分量【7】",
+   ideas:["Tarjan：DFS维护 dfn[] 和 low[]，栈记录路径","缩点：将每个 SCC 压缩为单节点得到 DAG","SCC 上再做 DP（如 2-SAT 判断、最大权闭合子图）"],
+   problems:["有向图缩点","2-SAT（提高级入门版）","受欢迎的牛","最大权闭合子图"],
+   keywords:["Tarjan","dfn/low","缩点","有向图"],
+   tip:"SCC + 缩点得 DAG，是解决有向图DP/贪心问题的标准预处理步骤。"},
+
+  {n:"割点与割边", d:4, raw:"【7】", section:"2.2.4 算法·图论算法",
+   summary:"无向图中删除后使图不连通的点（割点）或边（割边/桥），Tarjan 算法求解。",
+   complexity:"O(V+E)（DFS 一次）| 空间 O(V)",
+   syllabus:"§2.2.4 图论算法·割点、割边【7】",
+   ideas:["DFS 树：树边 + 返祖边","割点判断：根节点有≥2棵子树，或非根节点存在子节点 low[v]≥dfn[u]","割边判断：low[v]>dfn[u]","双连通分量：无割点（点双）或无割边（边双）"],
+   problems:["网络关键节点/链路找寻","双连通分量划分","缩桥图"],
+   keywords:["割点","割边","桥","双连通分量"],
+   tip:"割点/割边问题经常与网络可靠性结合，是图论的重要知识点。"},
+
+  {n:"单源次短路", d:4, raw:"【7】", section:"2.2.4 算法·图论算法",
+   summary:"在图中求某源点到目标的第二短路径长度，可扩展为第 k 短路。",
+   complexity:"O(E log V)（同 Dijkstra，维护两个距离数组）",
+   syllabus:"§2.2.4 图论算法·单源次短路【7】",
+   ideas:["维护 dist1[v]（最短）和 dist2[v]（次短）","松弛时更新两个数组","次短路可以经过重复节点","A*（K短路：Yen's算法 / A* 优先队列）"],
+   problems:["次短路计算","K短路问题","路由备用路径"],
+   keywords:["次短路","两个距离数组","K短路","A*"],
+   tip:"次短路维护两个距离数组即可；K短路需要 A* 算法，难度更高。"},
+
+  {n:"欧拉定理/欧拉函数", d:4, raw:"【7】", section:"2.2.5 数学·初等数论",
+   summary:"欧拉函数 φ(n) 为不超过 n 且与 n 互质的正整数个数；欧拉定理：a^φ(n)≡1(mod n)。",
+   complexity:"φ(n) 线性筛 O(n)；单个 φ(n) 用分解质因数 O(√n)",
+   syllabus:"§2.2.5 初等数论·欧拉定理和欧拉函数【7】",
+   ideas:["φ(n) = n·∏(1-1/p)（对n的每个质因子p）","欧拉定理推广了费马小定理","模意义下逆元：a⁻¹ ≡ a^(φ(m)-1) (mod m)（m为质数时用费马小定理）"],
+   problems:["模逆元计算","RSA加密原理","欧拉函数求和"],
+   keywords:["欧拉函数","模逆元","费马小定理","互质"],
+   tip:"欧拉函数可用线性筛 O(n) 预处理所有值，是数论DP的基础工具。"},
+
+  {n:"中国剩余定理(CRT)", d:4, raw:"【7】", section:"2.2.5 数学·初等数论",
+   summary:"同余方程组：已知 x≡aᵢ(mod mᵢ)（两两互质），CRT 给出唯一解在 M=∏mᵢ 范围内的值。",
+   complexity:"O(k log M)（k 为方程个数）",
+   syllabus:"§2.2.5 初等数论·中国剩余定理【7】",
+   ideas:["两两互质条件下构造解 x = Σaᵢ·Mᵢ·(Mᵢ⁻¹ mod mᵢ)","非互质情形（扩展CRT）需合并方程，用 exgcd","常与数位DP、计数问题结合"],
+   problems:["孙子定理原题","多模数同余方程组","时钟周期问题"],
+   keywords:["同余方程组","互质模数","构造解","扩展CRT"],
+   tip:"非互质情形需用扩展 CRT，注意无解的判断（gcd(m1,m2)∤(a2-a1)）。"},
+
+  {n:"扩展欧几里得算法", d:4, raw:"【7】", section:"2.2.5 数学·初等数论",
+   summary:"在欧几里得算法基础上，回溯求 ax+by=gcd(a,b) 的一组整数解 (x, y)。",
+   complexity:"O(log(min(a,b))) | 空间 O(log)（递归栈）",
+   syllabus:"§2.2.5 初等数论·扩展欧几里得算法【7】",
+   ideas:["递归求解：利用 gcd(a,b)=gcd(b,a%b) 回推 x,y","裴蜀定理：ax+by=c 有整数解 ⟺ gcd(a,b)|c","求模逆元：ax≡1(mod m) 即 ax+my=1"],
+   problems:["线性同余方程","模逆元求解","不定方程整数解"],
+   keywords:["裴蜀定理","整数解","模逆元","不定方程"],
+   tip:"exgcd 是求模逆元和解线性同余方程的标准工具。"},
+
+  {n:"模意义下的逆元", d:4, raw:"【7】", section:"2.2.5 数学·初等数论",
+   summary:"a 的模 m 逆元 a⁻¹ 满足 a·a⁻¹≡1(mod m)，用于模意义下的除法运算。",
+   complexity:"费马小定理（m为质数）O(log m)；exgcd O(log m)；线性预处理 O(n)",
+   syllabus:"§2.2.5 初等数论·模运算意义下的逆元【7】",
+   ideas:["费马小定理法：a⁻¹=a^(p-2) mod p（p为质数）","exgcd 法：解 ax≡1(mod m)","线性递推：inv[i] = -(m/i)·inv[m%i] mod m","用于组合数取模、分数取模"],
+   problems:["组合数取模","分数取模","线性基"],
+   keywords:["费马小定理","exgcd","线性递推","除法取模"],
+   tip:"竞赛中最常用「费马小定理快速幂」求逆元，线性递推用于批量预处理。"},
+
+  {n:"容斥原理", d:4, raw:"【7】", section:"2.2.5 数学·组合数学",
+   summary:"通过"加上奇数集合、减去偶数集合"的交替计算，精确统计多集合的并集大小。",
+   complexity:"O(2ⁿ)（枚举子集）或 O(n·Σ)",
+   syllabus:"§2.2.5 离散与组合数学·容斥原理【7】",
+   ideas:["|A∪B| = |A|+|B|-|A∩B|，推广到多集合","奇加偶减：枚举非空子集，奇数大小加，偶数大小减","莫比乌斯反演是容斥原理的代数推广"],
+   problems:["错位排列数","至少满足k个条件的方案数","整除计数","质因数容斥"],
+   keywords:["奇加偶减","交集","子集枚举","莫比乌斯"],
+   tip:"容斥原理与状压DP结合可解决集合覆盖类计数问题。"},
+
+  {n:"卡特兰数", d:4, raw:"【7】", section:"2.2.5 数学·组合数学",
+   summary:"Cₙ=C(2n,n)/(n+1)，描述合法括号序列、BST 个数、三角剖分等大量组合结构。",
+   complexity:"O(n) 递推；O(log n) 公式+逆元",
+   syllabus:"§2.2.5 离散与组合数学·卡特兰（Catalan）数【7】",
+   ideas:["递推：C₀=1，Cₙ=ΣCᵢ·Cₙ₋₁₋ᵢ","公式：Cₙ=C(2n,n)-C(2n,n-1)=C(2n,n)/(n+1)","「不越过对角线的路径数」是几何理解"],
+   problems:["合法括号序列数","BST 形态数目","凸多边形三角剖分数","出栈序列数"],
+   keywords:["括号序列","BST计数","凸多边形","C(2n,n)/(n+1)"],
+   tip:"卡特兰数出现频率极高，遇到「合法序列计数」类问题要想到它。"},
+
+  {n:"高斯消元法", d:4, raw:"【7】", section:"2.2.5 数学·线性代数",
+   summary:"通过行变换将增广矩阵化为行阶梯形，求解线性方程组，复杂度 O(n³)。",
+   complexity:"O(n³)（n 为方程/变量个数）",
+   syllabus:"§2.2.5 线性代数·高斯消元法【7】",
+   ideas:["选主元（列选主元）提高数值稳定性","通过行变换将矩阵化为行阶梯形","回代求解；判断唯一解/无解/无穷多解","异或方程组（GF(2)域上的高斯消元）"],
+   problems:["线性方程组求解","异或方程组","矩阵行列式计算","最大线性无关组"],
+   keywords:["行变换","主元","GF(2)","线性无关"],
+   tip:"异或方程组高斯消元（位运算优化）是线性基相关题目的重要工具。"},
 ];
 
-// 颜色配置
-const DCOLOR = ['','#ff4d4d','#ff7a00','#ffd000','#00ff88','#00a2ff'];
-const DLABEL = ['','难度 1-2 · 入门级基础','难度 3-4 · 入门级核心','难度 5-6 · 提高级','难度 7 · 提高级核心','难度 8-10 · NOI/IOI 级'];
+// ── 颜色配置 ──────────────────────────────────────────────
+const DC = {1:'#ff4d4d',2:'#ff7a00',3:'#ffd000',4:'#00ff88'};
+const DL = {1:'难度 1-2 · 入门级基础',2:'难度 3-4 · 入门级核心',3:'难度 5-6 · 提高级',4:'难度 7 · 提高级核心'};
 
-const box = document.getElementById('box');
-const items = [];
-let paused = false;
-
-class Label {
+// ── 浮动标签 ─────────────────────────────────────────────
+const box=document.getElementById('box');
+const items=[];let paused=false;
+class Label{
   constructor(info){
-    const el = document.createElement('div');
-    el.className = `tag diff-${info.d}`;
-    el.innerText = info.n;
+    const el=document.createElement('div');
+    el.className=`tag diff-${info.d}`;
+    el.innerText=info.n;
     box.appendChild(el);
-    this.el=el; this.info=info;
-    this.w=el.offsetWidth; this.h=el.offsetHeight;
-    this.x=Math.random()*(window.innerWidth-this.w);
-    this.y=Math.random()*(window.innerHeight-this.h);
-    this.vx=(Math.random()-.5)*(0.6+info.d*0.15);
-    this.vy=(Math.random()-.5)*(0.6+info.d*0.15);
+    this.el=el;this.info=info;
+    this.w=el.offsetWidth;this.h=el.offsetHeight;
+    this.x=Math.random()*(innerWidth-this.w);
+    this.y=Math.random()*(innerHeight-this.h);
+    const spd=0.5+info.d*0.1;
+    this.vx=(Math.random()-.5)*spd*2;
+    this.vy=(Math.random()-.5)*spd*2;
     this.hover=false;
     el.onmouseenter=()=>this.hover=true;
     el.onmouseleave=()=>this.hover=false;
@@ -331,122 +763,77 @@ class Label {
   }
   move(){
     if(!this.hover&&!paused){
-      this.x+=this.vx; this.y+=this.vy;
-      if(this.x<=0||this.x+this.w>=window.innerWidth) this.vx*=-1;
-      if(this.y<=0||this.y+this.h>=window.innerHeight) this.vy*=-1;
+      this.x+=this.vx;this.y+=this.vy;
+      if(this.x<=0||this.x+this.w>=innerWidth)this.vx*=-1;
+      if(this.y<=0||this.y+this.h>=innerHeight)this.vy*=-1;
     }
     this.el.style.transform=`translate(${this.x}px,${this.y}px)`;
   }
 }
 algos.forEach(a=>items.push(new Label(a)));
-(function tagF(){ items.forEach(i=>i.move()); requestAnimationFrame(tagF); })();
-window.onresize=()=>{ resize(); items.forEach(i=>{i.x=Math.min(i.x,window.innerWidth-i.w);i.y=Math.min(i.y,window.innerHeight-i.h);}); };
+(function tagF(){items.forEach(i=>i.move());requestAnimationFrame(tagF);})();
+window.onresize=()=>{resize();items.forEach(i=>{i.x=Math.min(i.x,innerWidth-i.w);i.y=Math.min(i.y,innerHeight-i.h);});};
 
-// ─────────── 详情面板 ───────────
-const panel   = document.getElementById('panel');
-const pTitle  = document.getElementById('panel-title');
-const pBadges = document.getElementById('panel-badges');
-const pContent= document.getElementById('panel-content');
-const pLoad   = document.getElementById('loading-wrap');
-const cache   = {};
+// ── 详情面板（静态内容，即时显示）───────────────────────
+const panel=document.getElementById('panel');
+const pTitle=document.getElementById('pt');
+const pBadge=document.getElementById('pb');
+const pContent=document.getElementById('pc');
 
-function closePanel(){ panel.classList.remove('open'); paused=false; }
+function closePanel(){panel.classList.remove('open');paused=false;}
 
-function badge(text, color){
+function mkBadge(text,color){
   const s=document.createElement('span');
-  s.className='badge';
-  s.textContent=text;
-  s.style.color=color; s.style.borderColor=color+'55'; s.style.background=color+'10';
+  s.className='bdg';s.textContent=text;
+  s.style.color=color;s.style.borderColor=color+'55';s.style.background=color+'10';
   return s;
 }
 
-async function openPanel(info){
+function openPanel(info){
   paused=true;
   pTitle.textContent=info.n;
-  pBadges.innerHTML='';
-  const c=DCOLOR[info.d];
-  pBadges.appendChild(badge(DLABEL[info.d], c));
-  pBadges.appendChild(badge(info.level, '#88aacc'));
-  pBadges.appendChild(badge(info.cat, '#667788'));
-  pBadges.appendChild(badge(`大纲 §${info.section}`, '#445566'));
-  panel.classList.add('open');
+  pBadge.innerHTML='';
+  const c=DC[info.d];
+  pBadge.appendChild(mkBadge(DL[info.d],c));
+  pBadge.appendChild(mkBadge(info.section,'#5577aa'));
+  pBadge.appendChild(mkBadge(info.raw,'#445566'));
 
-  if(cache[info.n]){ pContent.innerHTML=cache[info.n]; pLoad.style.display='none'; return; }
-
-  pContent.innerHTML=''; pLoad.style.display='flex';
-
-  try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-20250514', max_tokens:1000,
-        system:`你是 NOI/CSP 算法竞赛专家，熟读《全国青少年信息学奥林匹克系列竞赛大纲（2025年修订版）》。
-用户点击了一个算法知识点标签，请严格以下列 JSON 格式返回详细说明（只输出 JSON，不要 markdown 代码块）:
-{
-  "summary": "一句话简介（25字以内）",
-  "complexity_time": "时间复杂度，如 O(n log n)",
-  "complexity_space": "空间复杂度，如 O(n)",
-  "syllabus_text": "大纲原文相关条目的简要描述（基于2025大纲实际内容，30字以内）",
-  "core_ideas": ["核心思想1","核心思想2","核心思想3"],
-  "typical_problems": ["经典题目/题型1","经典题目/题型2","经典题目/题型3"],
-  "keywords": ["关键词1","关键词2","关键词3","关键词4"],
-  "study_tip": "学习建议（40字以内）",
-  "prerequisites": ["前置知识1","前置知识2"]
-}`,
-        messages:[{role:'user',content:`知识点名称：${info.n}
-大纲位置：${info.level} § ${info.section} (${info.cat})
-大纲原始难度系数：【${info.raw}】
-`}]
-      })
-    });
-    const data=await resp.json();
-    const raw=(data.content||[]).map(b=>b.text||'').join('');
-    const obj=JSON.parse(raw.replace(/```json|```/g,'').trim());
-
-    const html=`
+  pContent.innerHTML=`
 <div class="sec">
-  <div class="sec-label">简介</div>
-  <div class="sec-body">${obj.summary}</div>
+  <div class="sec-lbl">简介</div>
+  <div class="sec-body">${info.summary}</div>
 </div>
 <div class="sec">
-  <div class="sec-label">大纲原文定位</div>
-  <div class="syllabus-block">§ ${info.section} · ${info.cat}<br>${obj.syllabus_text}</div>
+  <div class="sec-lbl">大纲原文定位</div>
+  <div class="sylbox">${info.syllabus}</div>
 </div>
 <div class="sec">
-  <div class="sec-label">复杂度</div>
-  <div class="cbox">时间：${obj.complexity_time}&nbsp;&nbsp;|&nbsp;&nbsp;空间：${obj.complexity_space}</div>
+  <div class="sec-lbl">复杂度</div>
+  <div class="cbox">${info.complexity}</div>
 </div>
 <div class="sec">
-  <div class="sec-label">前置知识</div>
-  <div class="chip-row">${(obj.prerequisites||[]).map(k=>`<span class="chip">${k}</span>`).join('')}</div>
+  <div class="sec-lbl">核心思想</div>
+  <ul class="ilist">${info.ideas.map(s=>`<li>${s}</li>`).join('')}</ul>
 </div>
 <div class="sec">
-  <div class="sec-label">核心思想</div>
-  <ul class="item-list">${(obj.core_ideas||[]).map(s=>`<li>${s}</li>`).join('')}</ul>
+  <div class="sec-lbl">经典题目 / 题型</div>
+  <ul class="ilist">${info.problems.map(s=>`<li>${s}</li>`).join('')}</ul>
 </div>
 <div class="sec">
-  <div class="sec-label">经典题目 / 题型</div>
-  <ul class="item-list">${(obj.typical_problems||[]).map(s=>`<li>${s}</li>`).join('')}</ul>
-</div>
-<div class="sec">
-  <div class="sec-label">关键词</div>
-  <div class="chip-row">${(obj.keywords||[]).map(k=>`<span class="chip">${k}</span>`).join('')}</div>
+  <div class="sec-lbl">关键词</div>
+  <div class="chip-row">${info.keywords.map(k=>`<span class="chip">${k}</span>`).join('')}</div>
 </div>
 <div class="sec" style="margin-bottom:0">
-  <div class="sec-label">学习建议</div>
-  <div class="sec-body">${obj.study_tip}</div>
+  <div class="sec-lbl">学习建议</div>
+  <div class="sec-body">${info.tip}</div>
 </div>`;
-    cache[info.n]=html;
-    pLoad.style.display='none'; pContent.innerHTML=html;
-  } catch(e){
-    pLoad.style.display='none';
-    pContent.innerHTML=`<div style="color:#f55;padding:16px 0">加载失败，请重试。<br><small>${e.message}</small></div>`;
-  }
+
+  document.getElementById('pb-body').scrollTop=0;
+  panel.classList.add('open');
 }
 
 document.getElementById('box').addEventListener('click',e=>{
-  if(!e.target.classList.contains('tag')) closePanel();
+  if(!e.target.classList.contains('tag'))closePanel();
 });
 </script>
 </body>
