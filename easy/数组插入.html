@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>数组单点插入算法可视化</title>
+    <style>
+        :root { --bg: #1e1e1e; --panel: #2d2d2d; --text: #d4d4d4; --accent: #007acc; --hl: rgba(255, 255, 0, 0.25); }
+        body { font-family: 'Consolas', monospace; background: var(--bg); color: var(--text); margin: 0; padding: 20px; overflow: hidden; }
+        .layout { display: flex; gap: 15px; height: 95vh; }
+        .panel { background: var(--panel); border-radius: 8px; padding: 15px; display: flex; flex-direction: column; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+        .left { flex: 0.8; min-width: 220px; }
+        .center { flex: 1.5; align-items: center; }
+        .right { flex: 1.5; overflow-y: auto; background: #1e1e1e; border: 1px solid #333; }
+        
+        /* 数组视图样式 */
+        .array-container { display: flex; gap: 10px; margin: 40px 0; position: relative; height: 80px; align-items: flex-end; }
+        .cell-wrapper { display: flex; flex-direction: column; align-items: center; width: 50px; position: relative; }
+        .cell { width: 50px; height: 50px; background: #333; border: 2px solid #555; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; border-radius: 4px; transition: all 0.3s; color: #fff; }
+        .idx { font-size: 12px; color: #777; margin-top: 5px; }
+        
+        /* 动态状态 */
+        .cell.active-i { border-color: #f1c40f; box-shadow: 0 0 10px #f1c40f; }
+        .cell.active-next { border-color: #e67e22; background: #5c3d1d; }
+        .cell.inserted { background: #27ae60; border-color: #2ecc71; animation: pop 0.3s ease; }
+        .cell.moved { transform: translateY(-5px); background: #2980b9; }
+        
+        /* 指针箭头 */
+        .pointer { position: absolute; top: -30px; font-size: 20px; color: #f1c40f; transition: all 0.3s; display: none; }
+        
+        /* 变量面板 */
+        .var-panel { background: #121212; padding: 12px; border-radius: 6px; width: 100%; font-size: 14px; margin-bottom: 15px; border-left: 4px solid var(--accent); }
+        .var-item { margin: 4px 0; }
+        .var-val { color: #55ddaa; font-weight: bold; }
+
+        .status-msg { width: 100%; padding: 10px; background: #000; border-radius: 4px; font-size: 14px; color: #4ec9b0; border-left: 4px solid var(--accent); min-height: 42px; box-sizing: border-box; }
+        .btn-group { display: flex; gap: 8px; margin-top: 10px; width: 100%; }
+        button { flex: 1; padding: 10px; cursor: pointer; background: var(--accent); color: white; border: none; border-radius: 4px; font-weight: bold; }
+        button:hover { filter: brightness(1.2); }
+        
+        .code-line { display: block; padding: 2px 15px; border-left: 4px solid transparent; color: #abb2bf; font-size: 13.5px; white-space: pre; }
+        .code-line.active { background: var(--hl); border-left-color: #f1c40f; color: #fff; }
+        
+        @keyframes pop { 0% { transform: scale(0.8); } 100% { transform: scale(1); } }
+    </style>
+</head>
+<body>
+
+<div class="layout">
+    <div class="panel left">
+        <h3 style="margin:0 0 10px 0;">输入数据</h3>
+        <div style="background:#121212; padding:10px; border-radius:4px; font-size:14px; line-height:1.5; color:#9cdcfe;">
+            5<br>7 2 3 4 5<br>2<br>9
+        </div>
+        <div style="font-size: 11px; color: #666; margin-top: 15px;">
+            含义：在含有5个元素的数组第2个位置（下标2）插入数字9。
+        </div>
+        <div class="btn-group" style="margin-top:auto;">
+            <button onclick="init()">重置演示</button>
+        </div>
+    </div>
+
+    <div class="panel center">
+        <h3 style="margin:0 0 10px 0;">动态演练追踪</h3>
+        
+        <div class="var-panel">
+            <div class="var-item">当前数组大小 n = <span id="v-n" class="var-val">-</span></div>
+            <div class="var-item">要插入的位置 x = <span id="v-x" class="var-val">-</span></div>
+            <div class="var-item">要插入的数值 y = <span id="v-y" class="var-val">-</span></div>
+            <div class="var-item">循环计数器 i = <span id="v-i" class="var-val">-</span></div>
+        </div>
+
+        <div class="array-container" id="arrayBox"></div>
+
+        <div class="status-msg" id="st">准备就绪</div>
+        <div class="btn-group">
+            <button onclick="step()" style="background: #d35400;">单步执行 (Step)</button>
+        </div>
+    </div>
+
+    <div class="panel right">
+        <h3 style="margin:0 0 10px 0;">C++ 代码同步</h3>
+        <div id="codeArea"></div>
+    </div>
+</div>
+
+<script>
+    const code = [
+        { id: 0, text: 'int main() {' },
+        { id: 1, text: '    cin >> n;' },
+        { id: 2, text: '    for(int i = 1; i <= n; ++i) cin >> a[i];' },
+        { id: 3, text: '    cin >> x >> y;' },
+        { id: 4, text: '    // 从后往前挪动元素，留出空位' },
+        { id: 5, text: '    for(int i = n; i >= x; --i)' },
+        { id: 6, text: '        a[i + 1] = a[i];' },
+        { id: 7, text: '    a[x] = y; // 在腾出的空位插入新元素' },
+        { id: 8, text: '    for(int i = 1; i <= n + 1; ++i) cout << a[i] << \' \';' },
+        { id: 9, text: '}' }
+    ];
+
+    let s = { n: 5, x: 2, y: 9, a: [0, 7, 2, 3, 4, 5, 0, 0], i: -1, pc: 1, end: false };
+
+    function init() {
+        s.n = 5; s.x = 2; s.y = 9;
+        s.a = [0, 7, 2, 3, 4, 5, 0, 0];
+        s.i = -1; s.pc = 1; s.end = false;
+        draw();
+        showCode();
+        upd("初始化完成，准备读取数据。");
+    }
+
+    function showCode() {
+        document.getElementById('codeArea').innerHTML = code.map(l => `<span id="c-${l.id}" class="code-line">${l.text}</span>`).join('');
+    }
+
+    function draw() {
+        const box = document.getElementById('arrayBox');
+        box.innerHTML = '';
+        
+        // 渲染 1 到 n+2 的格子
+        for(let j = 1; j <= s.n + 2; j++) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'cell-wrapper';
+            
+            // 箭头指针
+            if (s.i !== -1 && j === s.i) {
+                const p = document.createElement('div');
+                p.className = 'pointer';
+                p.innerHTML = '↓ i';
+                p.style.display = 'block';
+                wrapper.appendChild(p);
+            }
+
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.innerText = s.a[j] === 0 && j > s.n && s.pc <= 6 ? '' : s.a[j];
+            
+            // 样式染色区分
+            if (s.pc === 6 && j === s.i) cell.classList.add('active-i');
+            if (s.pc === 6 && j === s.i + 1) cell.classList.add('active-next');
+            if (s.pc >= 6 && j > s.i && j <= s.n + 1 && s.a[j] !== 0 && s.pc <= 7) cell.classList.add('moved');
+            if (s.pc >= 7 && j === s.x) cell.classList.add('inserted');
+
+            const idx = document.createElement('div');
+            idx.className = 'idx';
+            idx.innerText = `a[${j}]`;
+
+            wrapper.appendChild(cell);
+            wrapper.appendChild(idx);
+            box.appendChild(wrapper);
+        }
+
+        // 更新变量显示
+        document.getElementById('v-n').innerText = s.n;
+        document.getElementById('v-x').innerText = s.x;
+        document.getElementById('v-y').innerText = s.y;
+        document.getElementById('v-i').innerText = s.i === -1 ? '未定义' : s.i;
+    }
+
+    function upd(msg) {
+        document.getElementById('st').innerText = msg;
+        document.querySelectorAll('.code-line').forEach(e => e.classList.remove('active'));
+        const l = document.getElementById(`c-${s.pc}`);
+        if(l) l.classList.add('active');
+    }
+
+    function step() {
+        if(s.end) return;
+        let msg = "";
+
+        switch(s.pc) {
+            case 1:
+                s.pc = 2; msg = "读取原始数组大小 n = 5"; break;
+            case 2:
+                s.pc = 3; msg = "成功读取 5 个初始元素并存入 a[1] ~ a[5]"; break;
+            case 3:
+                s.pc = 5; 
+                s.i = s.n; // 循环初始化
+                msg = `读取完成。准备在第 ${s.x} 个位置插入数字 ${s.y}。循环变量 i 初始化为 n (${s.i})`; 
+                break;
+            case 5: // 循环条件检查
+                if (s.i >= s.x) {
+                    s.pc = 6;
+                    msg = `检查循环条件：i(${s.i}) >= x(${s.x}) 成立，准备向后搬移元素`;
+                } else {
+                    s.pc = 7;
+                    msg = `检查循环条件：i(${s.i}) >= x(${s.x}) 不成立，腾位结束，退出循环`;
+                }
+                break;
+            case 6: // 搬移赋值
+                s.a[s.i + 1] = s.a[s.i];
+                msg = `核心操作：将 a[${s.i}] 的值 (${s.a[s.i]}) 复制到 a[${s.i + 1}]`;
+                s.i--; // 计数器自减
+                s.pc = 5;
+                break;
+            case 7: // 插入新值
+                s.a[s.x] = s.y;
+                s.pc = 8;
+                msg = `空位已留出！将目标值 y(${s.y}) 精准写入目标位置 a[${s.x}]`;
+                break;
+            case 8:
+                s.pc = 9;
+                msg = "遍历输出更新后的数组：a[1] 到 a[6]";
+                break;
+            case 9:
+                s.end = true;
+                msg = "程序执行完毕！成功完成插入。";
+                break;
+        }
+        draw();
+        upd(msg);
+    }
+
+    init();
+</script>
+</body>
+</html>
