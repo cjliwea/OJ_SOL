@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>求细胞个数 - DFS 递归版可视化</title>
+    <style>
+        :root { --bg: #020610; --panel: #111a2e; --text: #d4d4d4; --accent: #007acc; --hl: rgba(255, 255, 0, 0.25); }
+        *, *::before, *::after { box-sizing: border-box; }
+        body { font-family: 'Consolas', 'PingFang SC', monospace; background: var(--bg); color: var(--text); margin: 0; padding: 20px; overflow: hidden; }
+        .layout { display: flex; gap: 15px; height: 95vh; }
+        .panel { background: var(--panel); border-radius: 8px; padding: 15px; display: flex; flex-direction: column; box-shadow: 0 4px 12px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); }
+        .left { flex: 0.7; min-width: 220px; }
+        .center { flex: 1.8; display: flex; flex-direction: row; gap: 15px; }
+        .center-main { flex: 1; display: flex; flex-direction: column; }
+        .right { flex: 1.5; overflow-y: auto; background: #050d1a; border: 1px solid #1e293b; }
+        
+        textarea { width: 100%; flex-grow: 1; background: #020610; color: #9cdcfe; border: 1px solid #334155; padding: 10px; font-size: 14px; border-radius: 4px; line-height: 1.4; resize: none; font-family: inherit; }
+        
+        /* 矩阵网格 */
+        .grid-container { background: #020610; border-radius: 8px; padding: 15px; margin: 15px 0; overflow: auto; display: flex; justify-content: center; align-items: center; flex: 1; border: 1px solid #1e293b; }
+        .grid { display: grid; gap: 3px; }
+        .cell { width: 38px; height: 38px; background: #0f172a; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: all 0.15s; border-radius: 4px; color: #475569; font-weight: bold; border: 1px solid #1e293b; }
+        
+        /* 矩阵细胞状态色 */
+        .cell.is-cell { background: #1e293b; color: #38bdf8; border-color: #334155; }
+        .cell.scan-active { outline: 2px solid #38bdf8; outline-offset: 1px; z-index: 5; }
+        .cell.visited { background: #1e3a5f; color: #60a5fa; border-color: #2563eb; } /* st[i][j] == 1 */
+        .cell.on-path { background: #0284c7; color: #fff; box-shadow: inset 0 0 8px #0ea5e9; } /* 当前深搜路径链 */
+        .cell.cur-node { outline: 3px solid #f1c40f; outline-offset: 1px; z-index: 6; background: #23354f; color: #f1c40f; }
+        .cell.probing { background: #f1c40f; color: #000; transform: scale(1.05); }
+        .cell.invalid { background: #991b1b; color: #fff; transform: scale(0.95); }
+
+        .status-msg { width: 100%; padding: 10px; background: #020610; border-radius: 4px; font-size: 13.5px; color: #4ec9b0; border-left: 4px solid var(--accent); min-height: 52px; box-sizing: border-box; border: 1px solid #1e293b; }
+        .btn-group { display: flex; gap: 8px; margin-top: 10px; width: 100%; }
+        button { flex: 1; padding: 10px; cursor: pointer; background: var(--accent); color: white; border: none; border-radius: 4px; font-weight: bold; }
+        button:hover { filter: brightness(1.2); }
+        
+        .info-row { display: flex; justify-content: space-between; font-size: 13px; color: #94a3b8; background: #020610; padding: 8px 12px; border-radius: 4px; border: 1px solid #1e293b; margin-bottom: 10px; }
+        
+        /* 📦 纵向物理栈箱体容器 */
+        .stack-container { width: 170px; background: #020610; border: 2px solid #334155; border-top: none; border-radius: 0 0 8px 8px; display: flex; flex-direction: column-reverse; padding: 8px; gap: 6px; overflow-y: auto; height: 100%; }
+        .stack-label { font-size: 11px; text-align: center; color: #475569; letter-spacing: 1px; margin-top: 10px; text-transform: uppercase; font-weight: bold; }
+        .stack-frame { background: #1e293b; border: 1px solid #475569; border-radius: 6px; padding: 8px; text-align: center; animation: dropIn 0.2s ease-out; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .stack-frame.top-frame { border-color: #f1c40f; background: #23354f; }
+        .frame-title { font-size: 13px; font-weight: bold; color: #f1c40f; margin-bottom: 3px; }
+        .top-frame .frame-title { color: #fff; }
+        .frame-vars { font-size: 11px; color: #94a3b8; }
+
+        .code-line { display: block; padding: 2px 15px; border-left: 4px solid transparent; color: #94a3b8; font-size: 13px; white-space: pre; }
+        .code-line.active { background: var(--hl); border-left-color: #f1c40f; color: #fff; }
+        @keyframes dropIn { 0% { transform: translateY(-30px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<div class="layout">
+    <div class="panel left">
+        <h3 style="margin:0 0 10px 0; font-size:16px;">📥 样例编辑</h3>
+        <textarea id="matrixInput">4 10
+0234500067
+1034560500
+2045600671
+0000000089</textarea>
+        <div class="btn-group">
+            <button onclick="init()">解析并重置</button>
+        </div>
+    </div>
+
+    <div class="panel center">
+        <div class="center-main">
+            <h3 style="margin:0 0 10px 0; font-size:16px;">🚀 DFS 连通块消解追踪</h3>
+            <div class="status-msg" id="st">准备就绪</div>
+            
+            <div class="info-row" style="margin-top: 10px;">
+                <div>细胞连通数 res = <span id="resBox" style="color:#ff4d4d; font-weight:bold; font-size:15px;">0</span></div>
+                <div>模式: <span id="modeBox" style="color:#4ec9b0;">扫描中</span></div>
+            </div>
+
+            <div class="grid-container">
+                <div id="grid" class="grid"></div>
+            </div>
+            
+            <div class="btn-group">
+                <button onclick="step()" style="background: #d35400;">单步演练 (Step)</button>
+            </div>
+        </div>
+        
+        <div style="display: flex; flex-direction: column; height: 100%;">
+            <div class="stack-label">递归系统栈 (Stack)</div>
+            <div class="stack-container" id="stackBox"></div>
+        </div>
+    </div>
+
+    <div class="panel right">
+        <h3 style="margin:0 0 10px 0; font-size:16px;">💻 C++ 源码完全对齐</h3>
+        <div id="codeArea"></div>
+    </div>
+</div>
+
+<script>
+    const code = [
+        { id: 24, text: 'for (int i = 0; i < n; ++ i) {' },
+        { id: 25, text: '    for (int j = 0; j < m; ++ j) {' },
+        { id: 26, text: '        if (!st[i][j] && g[i][j] != \'0\') {' },
+        { id: 27, text: '            dfs(i, j);' },
+        { id: 28, text: '            res ++;' },
+        { id: 29, text: '        }' },
+        { id: 30, text: '    }' },
+        { id: 31, text: '}' },
+        { id: 9,  text: 'void dfs(int a, int b){' },
+        { id: 10, text: '    st[a][b] = 1;' },
+        { id: 12, text: '    for (int i = 0; i < 4; ++ i){' },
+        { id: 13, text: '        int nx = a + dx[i];' },
+        { id: 14, text: '        int ny = b + dy[i];' },
+        { id: 15, text: '        if (nx >= n || nx < 0 || ny >= m || ny < 0 ||' },
+        { id: 16, text: '            st[nx][ny] == 1 || g[nx][ny] == \'0\'){' },
+        { id: 17, text: '            continue;' },
+        { id: 18, text: '        }' },
+        { id: 19, text: '        dfs(nx, ny);' },
+        { id: 20, text: '    }' },
+        { id: 21, text: '}' }
+    ];
+
+    let s = { n: 0, m: 0, g: [], st: [], res: 0, pc: 24, mode: 'scan', si: 0, sj: 0, stack: [], nx: -1, ny: -1, end: false };
+    const dx = [-1, 0, 1, 0], dy = [0, -1, 0, 1]; // 上, 左, 下, 右
+
+    function init() {
+        const r = document.getElementById('matrixInput').value.trim().split('\n').map(l=>l.trim()).filter(l=>l.length>0);
+        try {
+            const size = r[0].split(/\s+/).map(Number);
+            s.n = size[0]; s.m = size[1];
+            s.g = r.slice(1, s.n + 1).map(l => l.split(''));
+            
+            s.st = Array.from({length: s.n}, () => Array(s.m).fill(0));
+            s.res = 0; s.pc = 24; s.mode = 'scan';
+            s.si = 0; s.sj = 0; s.stack = []; s.nx = -1; s.ny = -1; s.end = false;
+            
+            draw();
+            showCode();
+            upd("阵列初始化，主循环准备从 (0,0) 开始检索。");
+        } catch(e) { document.getElementById('st').innerText = "输入解析错误！"; }
+    }
+
+    function showCode() {
+        document.getElementById('codeArea').innerHTML = code.map(l => `<span id="ln-${l.id}" class="code-line">${l.text}</span>`).join('');
+    }
+
+    function draw() {
+        const container = document.getElementById('grid');
+        container.style.gridTemplateColumns = `repeat(${s.m}, 38px)`;
+        container.innerHTML = '';
+        let curFrame = s.stack[s.stack.length - 1] || null;
+
+        for (let i = 0; i < s.n; i++) {
+            for (let j = 0; j < s.m; j++) {
+                const v = document.createElement('div');
+                v.className = 'cell';
+                v.innerText = s.g[i][j];
+                
+                if (s.g[i][j] !== '0') v.classList.add('is-cell');
+                if (s.st[i][j] === 1) v.classList.add('visited');
+                if (s.stack.some(f => f.a === i && f.b === j)) {
+                    v.classList.remove('visited'); v.classList.add('on-path');
+                }
+                if (s.mode === 'scan' && i === s.si && j === s.sj) v.classList.add('scan-active');
+                if (curFrame && i === curFrame.a && j === curFrame.b) v.classList.add('cur-node');
+                if (s.mode === 'dfs' && (s.pc === 15 || s.pc === 16 || s.pc === 17) && i === s.nx && j === s.ny) v.classList.add('probing');
+
+                container.appendChild(v);
+            }
+        }
+        document.getElementById('resBox').innerText = s.res;
+        document.getElementById('modeBox').innerText = s.end ? "扫描完毕" : (s.mode === 'scan' ? "双层循环扫描" : "DFS深搜中");
+
+        // 📦 渲染堆叠箱体栈结构
+        const sBox = document.getElementById('stackBox');
+        sBox.innerHTML = '';
+        s.stack.forEach((frame, idx) => {
+            const fDiv = document.createElement('div');
+            fDiv.className = 'stack-frame';
+            if (idx === s.stack.length - 1) fDiv.className += ' top-frame';
+            fDiv.innerHTML = `
+                <div class="frame-title">dfs(${frame.a}, ${frame.b})</div>
+                <div class="frame-vars">局部变量 i = ${frame.i < 4 ? frame.i : '4 (结束)'}</div>
+            `;
+            sBox.appendChild(fDiv);
+        });
+    }
+
+    function upd(msg) {
+        document.getElementById('st').innerText = msg;
+        document.querySelectorAll('.code-line').forEach(e => e.classList.remove('active'));
+        const l = document.getElementById(`ln-${s.pc}`);
+        if(l) l.classList.add('active');
+    }
+
+    function step() {
+        if (s.end) return;
+        let msg = "";
+
+        if (s.mode === 'scan') {
+            if (s.si >= s.n) {
+                s.end = true; s.pc = 31; draw();
+                upd("全面扫描结束。最终细胞连通块数量 = " + s.res); return;
+            }
+
+            switch(s.pc) {
+                case 24: s.pc = 25; msg = `外层循环：i = ${s.si}`; break;
+                case 25: s.pc = 26; msg = `内层循环：检索到坐标 (${s.si}, ${s.sj})`; break;
+                case 26:
+                    if (!s.st[s.si][s.sj] && s.g[s.si][s.sj] != '0') {
+                        s.pc = 27; msg = `位置 (${s.si}, ${s.sj}) 未访问且有细胞数字，准备调用首层 DFS`;
+                    } else {
+                        s.sj++; if (s.sj >= s.m) { s.sj = 0; s.si++; }
+                        s.pc = 24; msg = "不符合搜寻点条件，跳过。";
+                    }
+                    break;
+                case 27:
+                    s.mode = 'dfs'; s.pc = 9;
+                    s.stack.push({ a: s.si, b: s.sj, i: 0 });
+                    msg = `【压栈】首层调用，建立执行帧 dfs(${s.si}, ${s.sj})`; break;
+                case 28:
+                    s.res++; s.pc = 24;
+                    msg = `【计数加1】该块完全消解，res 累加为 ${s.res}`;
+                    s.sj++; if (s.sj >= s.m) { s.sj = 0; s.si++; }
+                    break;
+            }
+        } else if (s.mode === 'dfs') {
+            let cur = s.stack[s.stack.length - 1];
+            switch(s.pc) {
+                case 9: s.pc = 10; msg = `展开执行帧作用域 dfs(${cur.a}, ${cur.b})`; break;
+                case 10:
+                    s.st[cur.a][cur.b] = 1; s.pc = 12;
+                    msg = `执行标记：设置全局阻断状态 st[${cur.a}][${cur.b}] = 1`; break;
+                case 12:
+                    if (cur.i < 4) { s.pc = 13; msg = `方向循环：当前指针 i = ${cur.i}`; } 
+                    else { s.pc = 21; msg = `节点 (${cur.a}, ${cur.b}) 的4个方向都已探完`; }
+                    break;
+                case 13:
+                    s.nx = cur.a + dx[cur.i]; s.pc = 14;
+                    msg = `计算试探横坐标：nx = a + dx[${cur.i}] = ${s.nx}`; break;
+                case 14:
+                    s.ny = cur.b + dy[cur.i]; s.pc = 15;
+                    msg = `计算试探纵坐标：ny = b + dy[${cur.i}] = ${s.ny}`; break;
+                case 15:
+                    // 复合边界过滤验证
+                    const out = s.nx >= s.n || s.nx < 0 || s.ny >= s.m || s.ny < 0 || s.st[s.nx]?.[s.ny] == 1 || s.g[s.nx]?.[s.ny] == '0';
+                    if (out) {
+                        s.pc = 17; msg = `过滤判定：目标位置符合剪枝/跳过规则`;
+                    } else {
+                        s.pc = 18; msg = `判定成功：目标位置 (${s.nx}, ${s.ny}) 是合法且未访问的细胞`;
+                    }
+                    break;
+                case 17:
+                    const c = document.getElementById(`grid`).children[s.nx * s.m + s.ny];
+                    if (s.nx >= 0 && s.nx < s.n && s.ny >= 0 && s.ny < s.m && c) c.classList.add('invalid');
+                    cur.i++; s.pc = 12; msg = `执行 continue，计数器自增 i++`;
+                    setTimeout(() => draw(), 250);
+                    break;
+                case 18:
+                    s.stack.push({ a: s.nx, b: s.ny, i: 0 }); // 📦 压入新执行箱体
+                    cur.i++; // 记录当前层回来后的下一步方向
+                    s.pc = 9; s.nx = -1; s.ny = -1;
+                    msg = `【下钻压栈】发起新一级递归调用`; break;
+                case 21:
+                    s.stack.pop(); // 📦 弹出销毁顶部箱体
+                    s.nx = -1; s.ny = -1;
+                    if (s.stack.length > 0) {
+                        s.pc = 12; msg = `【弹栈回溯】当前函数域结束，恢复到上一级作用域帧`;
+                    } else {
+                        s.mode = 'scan'; s.pc = 28; msg = `【弹栈】底层深搜链执行完毕，返回主循环层。`;
+                    }
+                    break;
+            }
+        }
+        draw();
+        upd(msg);
+    }
+    init();
+</script>
+</body>
+</html>
