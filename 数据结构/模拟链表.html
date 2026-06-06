@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>链式前向星（数组模拟链表）可视化教学工具</title>
+    <style>
+        :root { --bg: #020610; --panel: #111a2e; --text: #d4d4d4; --accent: #007acc; --hl: rgba(255, 255, 0, 0.25); }
+        *, *::before, *::after { box-sizing: border-box; }
+        body { font-family: 'Consolas', 'PingFang SC', monospace; background: var(--bg); color: var(--text); margin: 0; padding: 20px; overflow: hidden; }
+        .layout { display: flex; gap: 15px; height: 95vh; }
+        .panel { background: var(--panel); border-radius: 8px; padding: 15px; display: flex; flex-direction: column; box-shadow: 0 4px 12px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); }
+        .left { flex: 0.7; min-width: 220px; }
+        .center { flex: 1.8; align-items: center; }
+        .right { flex: 1.5; overflow-y: auto; background: #050d1a; border: 1px solid #1e293b; }
+        
+        textarea { width: 100%; flex-grow: 1; background: #020610; color: #9cdcfe; border: 1px solid #334155; padding: 10px; font-size: 14px; border-radius: 4px; line-height: 1.4; resize: none; font-family: inherit; }
+        
+        /* 链表容器及节点图形 */
+        .viz-container { background: #020610; border-radius: 8px; padding: 15px; margin: 15px 0; overflow-y: auto; flex: 1; width: 100%; border: 1px solid #1e293b; }
+        .list-row { display: flex; align-items: center; margin-bottom: 12px; padding: 4px; border-radius: 4px; background: rgba(255,255,255,0.01); }
+        
+        .head-box { width: 95px; height: 38px; background: #1e293b; border: 2px solid #475569; display: flex; align-items: center; justify-content: center; font-size: 13px; border-radius: 4px; font-weight: bold; color: #94a3b8; }
+        .head-box.active { border-color: #f1c40f; color: #fff; box-shadow: 0 0 8px #f1c40f; }
+        
+        .arrow { color: #475569; margin: 0 8px; font-weight: bold; font-size: 16px; user-select: none; }
+        .arrow.active { color: #f1c40f; animation: pulse 0.5s infinite alternate; }
+
+        .edge-node { display: flex; background: #0f172a; border: 2px solid #334155; border-radius: 6px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: all 0.2s; }
+        .edge-node.active { border-color: #00ff88; box-shadow: 0 0 10px rgba(0,255,136,0.3); transform: scale(1.03); }
+        .node-part { padding: 6px 10px; font-size: 12px; text-align: center; }
+        .part-to { background: #1e293b; color: #00ff88; font-weight: bold; border-right: 1px solid #334155; }
+        .part-nxt { color: #38bdf8; font-family: monospace; }
+        
+        .null-node { color: #475569; font-size: 12px; font-style: italic; user-select: none; }
+
+        /* 变量控制区 */
+        .status-msg { width: 100%; padding: 10px; background: #020610; border-radius: 4px; font-size: 13.5px; color: #4ec9b0; border-left: 4px solid var(--accent); min-height: 55px; box-sizing: border-box; border: 1px solid #1e293b; }
+        .btn-group { display: flex; gap: 8px; margin-top: 10px; width: 100%; }
+        button { flex: 1; padding: 10px; cursor: pointer; background: var(--accent); color: white; border: none; border-radius: 4px; font-weight: bold; }
+        button:hover { filter: brightness(1.2); }
+        
+        .edge-pool-title { font-size: 11px; text-align: left; color: #475569; margin-top: 10px; font-weight: bold; letter-spacing: 1px; }
+        .edge-pool { display: flex; flex-wrap: wrap; gap: 6px; background: #020610; padding: 8px; border-radius: 6px; border: 1px solid #1e293b; font-size: 11px; min-height: 40px; }
+        .pool-item { padding: 2px 6px; background: #1e293b; border-radius: 4px; border: 1px solid #334155; color: #94a3b8; }
+        .pool-item.active { background: #0284c7; border-color: #38bdf8; color: #fff; }
+
+        .code-line { display: block; padding: 2px 15px; border-left: 4px solid transparent; color: #94a3b8; font-size: 13px; white-space: pre; }
+        .code-line.active { background: var(--hl); border-left-color: #f1c40f; color: #fff; }
+    </style>
+</head>
+<body>
+
+<div class="layout">
+    <div class="panel left">
+        <h3 style="margin:0 0 10px 0; font-size:16px;">📥 样例输入</h3>
+        <textarea id="graphInput">5 6
+1 3
+2 4
+1 4
+2 3
+3 5
+2 5</textarea>
+        <div class="btn-group">
+            <button onclick="init()">解析并重置</button>
+        </div>
+    </div>
+
+    <div class="panel center">
+        <h3 style="margin:0 0 10px 0; font-size:16px;">🚀 邻接表（静态链表结构）动态构图</h3>
+        <div class="status-msg" id="st">准备就绪</div>
+        
+        <div class="viz-container" id="vizBox"></div>
+        
+        <div class="edge-pool-title">静态边集数组池 (Edge Pool) —— 全局 cnt 分配计数</div>
+        <div class="edge-pool" id="poolBox"></div>
+
+        <div class="btn-group">
+            <button onclick="step()" style="background: #d35400;">单步加边 (Step Edge)</button>
+        </div>
+    </div>
+
+    <div class="panel right">
+        <h3 style="margin:0 0 10px 0; font-size:16px;">💻 静态模拟指针（链式前向星）</h3>
+        <div id="codeArea"></div>
+    </div>
+</div>
+
+<script>
+    const code = [
+        { id: 0, text: '// 数组模拟指针关键：head存储最新的边编号，nxt存储上一条边的指针' },
+        { id: 1, text: 'int head[5005], to[200005], nxt[200005], cnt;' },
+        { id: 2, text: 'void add(int u, int v) {' },
+        { id: 3, text: '    cnt++;          // 1. 申请分配一个新的边结点空间' },
+        { id: 4, text: '    to[cnt] = v;    // 2. 记录当前边的终点目标位置' },
+        { id: 5, text: '    nxt[cnt] = head[u]; // 3. 新结点的next指针指向当前表头' },
+        { id: 6, text: '    head[u] = cnt;  // 4. 更新表头，使head重新指向最新结点' },
+        { id: 7, text: '}' },
+        { id: 8, text: '// 无向边处理逻辑' },
+        { id: 9, text: 'add(u, v);' },
+        { id: 10, text: 'add(v, u);' }
+    ];
+
+    let s = { n: 0, m: 0, edges: [], edgeIdx: 0, subStep: 0, head: [], to: [], nxt: [], cnt: 0, curU: 0, curV: 0 };
+
+    function init() {
+        const r = document.getElementById('graphInput').value.trim().split('\n').map(l=>l.trim()).filter(l=>l.length>0);
+        try {
+            const size = r[0].split(/\s+/).map(Number);
+            s.n = size[0]; s.m = size[1];
+            s.edges = r.slice(1, s.m + 1).map(l => l.split(/\s+/).map(Number));
+            
+            s.head = Array(s.n + 1).fill(0);
+            s.to = [0]; s.nxt = [0]; s.cnt = 0;
+            s.edgeIdx = 0; s.subStep = 0; s.curU = 0; s.curV = 0;
+            
+            draw();
+            showCode();
+            upd("图载入完成。点击单步执行观察加边过程。");
+        } catch(e) { document.getElementById('st').innerText = "数据解析错误，请确保格式正确！"; }
+    }
+
+    function showCode() {
+        document.getElementById('codeArea').innerHTML = code.map(l => `<span id="c-${l.id}" class="code-line">${l.text}</span>`).join('');
+    }
+
+    function draw() {
+        // 1. 渲染主邻接链表
+        const box = document.getElementById('vizBox');
+        box.innerHTML = '';
+        
+        for (let u = 1; u <= s.n; u++) {
+            const row = document.createElement('div');
+            row.className = 'list-row';
+            
+            const hBox = document.createElement('div');
+            hBox.className = 'head-box';
+            hBox.innerHTML = `head[${u}] = ${s.head[u]}`;
+            if (s.curU === u && s.subStep > 0) hBox.classList.add('active');
+            row.appendChild(hBox);
+
+            let edgePtr = s.head[u];
+            let loopCount = 0;
+            while (edgePtr > 0 && loopCount < 100) {
+                const arrow = document.createElement('span');
+                arrow.className = 'arrow';
+                arrow.innerHTML = '➔';
+                if (s.curU === u && edgePtr === s.cnt && s.subStep >= 5) arrow.classList.add('active');
+                row.appendChild(arrow);
+
+                const eNode = document.createElement('div');
+                eNode.className = 'edge-node';
+                if (edgePtr === s.cnt && s.curU === u) eNode.classList.add('active');
+                
+                eNode.innerHTML = `
+                    <div class="node-part part-to">to[${edgePtr}]: ${s.to[edgePtr]}</div>
+                    <div class="node-part part-nxt">nxt: ${s.nxt[edgePtr]}</div>
+                `;
+                row.appendChild(eNode);
+                edgePtr = s.nxt[edgePtr];
+                loopCount++;
+            }
+            
+            const tailArrow = document.createElement('span');
+            tailArrow.className = 'arrow';
+            tailArrow.innerHTML = '➔';
+            row.appendChild(tailArrow);
+
+            const nullNode = document.createElement('span');
+            nullNode.className = 'null-node';
+            nullNode.innerText = '0 (NULL)';
+            row.appendChild(nullNode);
+
+            box.appendChild(row);
+        }
+
+        // 2. 渲染静态边池
+        const pBox = document.getElementById('poolBox');
+        pBox.innerHTML = '';
+        for (let i = 1; i <= s.cnt; i++) {
+            const item = document.createElement('span');
+            item.className = 'pool-item';
+            if (i === s.cnt) item.classList.add('active');
+            item.innerText = `e[${i}]`;
+            pBox.appendChild(item);
+        }
+    }
+
+    function upd(msg, pc) {
+        document.getElementById('st').innerText = msg;
+        document.querySelectorAll('.code-line').forEach(e => e.classList.remove('active'));
+        s.pc = pc;
+        const l = document.getElementById(`c-${pc}`);
+        if(l) l.classList.add('active');
+    }
+
+    function step() {
+        if (s.edgeIdx >= s.edges.length && s.subStep === 0) {
+            upd("全部边处理完毕！图结构已完整构建。", 0);
+            s.curU = 0; draw(); return;
+        }
+
+        if (s.subStep === 0) {
+            // 读取新边
+            const curEdge = s.edges[s.edgeIdx];
+            s.curU = curEdge[0]; s.curV = curEdge[1];
+            s.subStep = 1;
+            upd(`开始处理读入的第 ${s.edgeIdx + 1} 条无向边：${s.curU} ↔ ${s.curV}，触发 add(${s.curU}, ${s.curV})`, 9);
+            return;
+        }
+
+        // 模拟 add(u, v) 内部子步数
+        if (s.subStep === 1) { // cnt++
+            s.cnt++;
+            s.to[s.cnt] = 0; s.nxt[s.cnt] = 0;
+            s.subStep = 2;
+            draw();
+            upd(`【add第1步】内部计数器增加，分配静态空闲空间：cnt = ${s.cnt}`, 3);
+        } else if (s.subStep === 2) { // to[cnt] = v
+            s.to[s.cnt] = s.curV;
+            s.subStep = 3;
+            draw();
+            upd(`【add第2步】赋予边目标属性值：设置边节点 to[${s.cnt}] = ${s.curV}`, 4);
+        } else if (s.subStep === 3) { // nxt[cnt] = head[u]
+            s.nxt[s.cnt] = s.head[s.curU];
+            s.subStep = 4;
+            draw();
+            upd(`【add第3步】链表拦截！使新结点的下跳指针 nxt 指向当前的旧表头值（head[${s.curU}] = ${s.head[s.curU]}）`, 5);
+        } else if (s.subStep === 4) { // head[u] = cnt
+            s.head[s.curU] = s.cnt;
+            s.subStep = 5;
+            draw();
+            upd(`【add第4步】表头易主：更新 head[${s.curU}] 指向刚刚建好的新节点编外序号 ${s.cnt}`, 6);
+        } else if (s.subStep === 5) { // 切换到反向加边或下一条边
+            // 判断当前是正向还是反向
+            const curEdge = s.edges[s.edgeIdx];
+            if (s.curU === curEdge[0] && s.curV === curEdge[1]) {
+                // 刚做完正向，切换到反向边 add(v, u)
+                s.curU = curEdge[1]; s.curV = curEdge[0];
+                s.subStep = 1;
+                upd(`无向边对称性：触发反向加边逻辑 add(${s.curU}, ${s.curV})`, 10);
+            } else {
+                // 两边都加完了，处理下一条输入
+                s.edgeIdx++;
+                s.subStep = 0;
+                s.curU = 0; s.curV = 0;
+                draw();
+                step(); // 自动推进到下一条边的提示态
+            }
+        }
+    }
+
+    init();
+</script>
+</body>
+</html>
