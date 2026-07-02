@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>0-1背包问题 - 动态规划推演系统</title>
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 Highlight.js -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <style>
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        body {
+            background-color: #020617; /* slate-950 */
+            color: #cbd5e1; /* slate-300 */
+        }
+
+        .cyber-panel {
+            background: linear-gradient(145deg, #0f172a 0%, #020617 100%);
+            border: 1px solid #1e293b;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+
+        /* DP Table Styles */
+        .dp-table {
+            border-collapse: separate;
+            border-spacing: 4px;
+        }
+        .dp-cell {
+            width: 44px;
+            height: 44px;
+            text-align: center;
+            vertical-align: middle;
+            background-color: #1e293b; /* slate-800 */
+            border: 1px solid #334155; /* slate-700 */
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 14px;
+            color: #94a3b8; /* slate-400 */
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .dp-header {
+            background-color: #0f172a;
+            border-color: #38bdf8; /* sky-400 */
+            color: #38bdf8;
+            font-weight: bold;
+        }
+        .dp-idx {
+            background-color: transparent;
+            border: none;
+            color: #64748b;
+            font-size: 11px;
+            text-align: center;
+        }
+        
+        /* 动画高亮状态 */
+        .dp-active-target {
+            transform: scale(1.15);
+            background-color: #3b82f6 !important; /* blue-500 */
+            color: white !important;
+            border-color: #60a5fa !important;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.8);
+            z-index: 10;
+        }
+        .dp-source-skip {
+            background-color: #78350f !important; /* amber-900 / 不放物品，被迫继承成果 */
+            border-color: #f59e0b !important;
+            color: #fbbf24 !important;
+            box-shadow: inset 0 0 8px rgba(245, 158, 11, 0.4);
+        }
+        .dp-source-take {
+            background-color: #064e3b !important; /* emerald-900 / 扣除容量后的回溯点 */
+            border-color: #10b981 !important;
+            color: #34d399 !important;
+            box-shadow: inset 0 0 8px rgba(16, 185, 129, 0.4);
+            transform: scale(1.05);
+        }
+        .dp-filled {
+            background-color: #0f172a;
+            color: #e2e8f0;
+            border-color: #475569;
+        }
+        .header-active-row {
+            background-color: #0284c7 !important; /* sky-600 */
+            color: white !important;
+            box-shadow: 0 0 10px rgba(2, 132, 199, 0.8);
+        }
+        .header-active-col {
+            background-color: #059669 !important; /* emerald-600 */
+            color: white !important;
+            box-shadow: 0 0 10px rgba(5, 150, 105, 0.8);
+        }
+    </style>
+</head>
+<body class="font-sans min-h-screen flex flex-col">
+
+    <!-- 导航栏 -->
+    <header class="bg-slate-900 border-b border-sky-500/30 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold flex items-center gap-3">
+                <span class="text-3xl text-sky-400">❖</span>
+                <span class="tracking-widest text-sky-400 font-bold">0-1背包 二维动态规划推演系统</span>
+            </h1>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl mx-auto w-full p-4 md:p-6 space-y-6">
+        
+        <!-- 任务描述与核心方程 -->
+        <div class="grid md:grid-cols-3 gap-6">
+            <section class="cyber-panel rounded-xl p-5 border-l-4 border-sky-500 md:col-span-1 flex flex-col justify-between">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-100 mb-2 border-b border-slate-700 pb-1">任务简报</h2>
+                    <p class="text-slate-300 text-xs leading-relaxed mb-3">
+                        旅行者有一个最多装 <span class="text-sky-400 font-mono font-bold">M</span> 公斤的背包和 <span class="text-sky-400 font-mono font-bold">N</span> 件物品。每件物品重量为 <b>W<sub>i</sub></b>，价值为 <b>C<sub>i</sub></b>。求背包能获得的最大总价值。
+                    </p>
+                    <div class="bg-black/40 p-2.5 rounded text-xs text-slate-400 border border-slate-800 font-mono">
+                        <span class="text-slate-300 font-bold">样例输入：</span><br>
+                        10 4 (M=10, N=4)<br>
+                        2 1&nbsp;&nbsp; 3 3&nbsp;&nbsp; 4 5&nbsp;&nbsp; 7 9
+                    </div>
+                </div>
+            </section>
+
+            <section class="cyber-panel rounded-xl p-5 border-l-4 border-emerald-500 md:col-span-2">
+                <h2 class="text-xl font-bold text-slate-100 mb-2 border-b border-slate-700 pb-1">标准二维状态转移方程</h2>
+                <p class="text-slate-300 text-xs mb-2">
+                    定义 <b>dp[i][j]</b>：前 <b>i</b> 件物品在剩余容量为 <b>j</b> 时的最大价值。
+                </p>
+                <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-800 space-y-2 text-xs font-mono">
+                    <div>
+                        <span class="text-amber-400 font-bold">放不下 (j &lt; W<sub>i</sub>)：</span>继承上一行同列的成果（放弃当前物品）
+                        <div class="text-slate-400 pl-4 text-sm mt-0.5 font-bold">dp[i][j] = dp[i - 1][j]</div>
+                    </div>
+                    <div>
+                        <span class="text-emerald-400 font-bold">放得下 (j &ge; W<sub>i</sub>)：</span>在“不放”与“选择放入”中取最大值
+                        <div class="text-slate-400 pl-4 text-sm mt-0.5 font-bold">dp[i][j] = max( dp[i - 1][j], dp[i - 1][j - W<sub>i</sub>] + C<sub>i</sub> )</div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- 交互式动画演示主面板 -->
+        <section class="cyber-panel rounded-xl shadow-md p-5">
+            <div class="flex flex-col lg:flex-row lg:justify-between lg:items-start mb-4 gap-4 bg-slate-900 p-4 rounded-lg border border-slate-800">
+                <!-- 动态输入区 -->
+                <div class="flex-grow space-y-2 w-full lg:w-2/3">
+                    <div class="flex items-center gap-4">
+                        <div class="flex items-center gap-1.5">
+                            <span class="font-semibold text-slate-400 text-xs font-mono">背包容量 M:</span>
+                            <input type="number" id="sim-m" value="10" min="1" max="12" class="bg-black border border-slate-700 w-16 p-1 rounded text-center font-mono text-xs font-bold text-sky-400 outline-none">
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="font-semibold text-slate-400 text-xs font-mono">物品数量 N:</span>
+                            <input type="number" id="sim-n" value="4" min="1" max="6" class="bg-black border border-slate-700 w-14 p-1 rounded text-center font-mono text-xs font-bold text-sky-400 outline-none">
+                        </div>
+                        <button onclick="updateItemsLayout()" class="text-xs bg-slate-800 hover:bg-slate-700 text-sky-400 py-1 px-2.5 rounded transition border border-slate-700 font-mono">重新生成物品</button>
+                    </div>
+                    
+                    <!-- 物品具体W、C配置区 -->
+                    <div id="items-config-container" class="flex flex-wrap gap-3 pt-2 border-t border-slate-800/60">
+                        <!-- 动态载入 -->
+                    </div>
+                </div>
+                
+                <!-- 控制按钮 -->
+                <div class="flex flex-col gap-2 flex-shrink-0 w-full lg:w-auto justify-end">
+                    <span id="state-badge" class="px-2 py-1 text-center rounded bg-slate-800 text-slate-500 font-mono text-xs">已停止</span>
+                    <div class="flex gap-2">
+                        <button onclick="handleAutoPlay()" id="btn-auto" class="bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 px-3 rounded shadow flex-1 text-xs transition font-mono whitespace-nowrap">自动推演</button>
+                        <button onclick="handleNextStep()" id="btn-step" class="bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-3 rounded shadow flex-1 text-xs transition font-mono ring-2 ring-blue-400 ring-offset-2 ring-offset-slate-900 whitespace-nowrap">单步计算 ⏭</button>
+                        <button onclick="handleReset()" id="btn-reset" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-3 rounded shadow text-xs transition font-mono">重置</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid lg:grid-cols-3 gap-4">
+                <!-- 左侧：DP 表格可视化 -->
+                <div class="lg:col-span-2 bg-slate-900 p-4 rounded-xl border border-slate-800 flex flex-col min-h-[380px] relative overflow-auto shadow-inner">
+                    <div class="text-slate-400 font-bold mb-3 text-xs font-mono flex justify-between uppercase tracking-widest border-b border-slate-800 pb-2 sticky top-0 bg-slate-900 z-10">
+                        <span>DP 2D 决策内存矩阵 (完全对应代码数组)</span>
+                        <span class="text-emerald-400 bg-emerald-950/30 px-2 py-0.5 rounded border border-emerald-900/50">最大价值 Ans: <strong id="disp-ans" class="text-base font-bold">0</strong></span>
+                    </div>
+                    
+                    <div class="w-full flex-grow flex justify-center items-start pt-2 overflow-x-auto">
+                        <div id="dp-table-container" class="transition-all duration-300">
+                            <!-- 由 JavaScript 渲染 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右侧：日志输出 -->
+                <div class="bg-black border border-slate-800 rounded-xl flex flex-col overflow-hidden h-64 lg:h-auto shadow-inner">
+                    <div class="bg-slate-900 border-b border-slate-800 px-3 py-2 font-semibold text-slate-400 text-[10px] uppercase tracking-widest">
+                        状态转移标准日志视图
+                    </div>
+                    <div id="console-output" class="p-3 font-mono text-[11px] space-y-2 overflow-y-auto flex-grow leading-relaxed">
+                        <!-- 动态日志 -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 二维竞赛代码区 -->
+        <section class="cyber-panel rounded-xl shadow-md p-5 border-l-4 border-rose-500">
+            <h2 class="text-lg font-bold text-slate-100 mb-2 border-b border-slate-700 pb-1">竞赛标准二维 C++ 代码 (完全对应图形矩阵)</h2>
+            <p class="text-slate-400 text-xs mb-3">
+                此代码的逻辑和循环顺序与上方可视化演示<b>完全严格一致</b>。前置全局声明静态数组，天然初始化 <code>dp[i][0] = 0</code> 和 <code>dp[0][j] = 0</code>。
+            </p>
+            <pre><code class="language-cpp hljs">#include &lt;iostream&gt;
+#include &lt;algorithm&gt;
+using namespace std;
+
+int m, n;
+int w[35], c[35];
+int dp[35][205]; // 二维决策矩阵
+
+int main() {
+    // 读入背包容量与物品数量
+    cin >> m >> n;
+    for (int i = 1; i <= n; i++) {
+        cin >> w[i] >> c[i];
+    }
+
+    // 正序遍历物品 i，正序遍历容量 j 
+    for (int i = 1; i <= n; i++) {
+        for (int j = 1; j <= m; j++) {
+            if (j < w[i]) {
+                // 放不下：直接继承上一行的成果
+                dp[i][j] = dp[i - 1][j];
+            } else {
+                // 放得下：在“放弃当前物品”和“腾出空间买入”之间取最大值
+                dp[i][j] = max(dp[i - 1][j], dp[i - 1][j - w[i]] + c[i]);
+            }
+        }
+    }
+
+    // 右下角终点即为最大总价值
+    cout << dp[n][m] << endl;
+    return 0;
+}</code></pre>
+        </section>
+    </main>
+
+    <footer class="bg-black border-t border-slate-900 text-slate-600 text-center py-4 mt-auto text-[10px] font-mono tracking-widest uppercase">
+        2D Knapsack DP Matrix Visualizer // OI Coach System
+    </footer>
+
+    <script>
+        hljs.highlightAll();
+
+        const defaultItems = [
+            { w: 2, c: 1 },
+            { w: 3, c: 3 },
+            { w: 4, c: 5 },
+            { w: 7, c: 9 }
+        ];
+
+        window.addEventListener('DOMContentLoaded', () => {
+            updateItemsLayout(true);
+        });
+
+        function updateItemsLayout(isFirstLoad = false) {
+            const n = parseInt(document.getElementById('sim-n').value) || 4;
+            const container = document.getElementById('items-config-container');
+            container.innerHTML = '';
+
+            for (let i = 1; i <= n; i++) {
+                const defW = (isFirstLoad && defaultItems[i-1]) ? defaultItems[i-1].w : (i + 1);
+                const defC = (isFirstLoad && defaultItems[i-1]) ? defaultItems[i-1].c : (i * 2 - 1);
+
+                const itemDiv = document.createElement('div');
+                itemDiv.className = "bg-slate-950 p-2 rounded border border-slate-800 flex items-center gap-2 text-xs";
+                itemDiv.innerHTML = `
+                    <span class="font-bold text-sky-400 font-mono">#${i}:</span>
+                    <label class="text-slate-500">W:</label>
+                    <input type="number" id="w-${i}" value="${defW}" min="1" max="15" class="bg-black text-center text-amber-400 font-mono w-10 border border-slate-800 rounded">
+                    <label class="text-slate-500">C:</label>
+                    <input type="number" id="c-${i}" value="${defC}" min="0" max="99" class="bg-black text-center text-emerald-400 font-mono w-10 border border-slate-800 rounded">
+                `;
+                container.appendChild(itemDiv);
+            }
+            if (simState === 'STOPPED') refreshDPTable();
+        }
+
+        document.getElementById('sim-m').addEventListener('input', () => { if(simState==='STOPPED') refreshDPTable(); });
+        document.getElementById('sim-n').addEventListener('input', () => { updateItemsLayout(); });
+
+        let simState = 'STOPPED'; 
+        let nextStepResolve = null;
+        let simVersion = 0;       
+        const autoDelaySpeed = 500;
+
+        function updateBtnUI() {
+            const btnAuto = document.getElementById('btn-auto');
+            const btnStep = document.getElementById('btn-step');
+            const badge = document.getElementById('state-badge');
+            
+            badge.innerText = simState === 'STOPPED' ? '已停止' : (simState === 'PLAYING' ? '自动推演中' : '等待单步操作');
+
+            if (simState === 'STOPPED') {
+                btnAuto.innerText = '自动推演';
+                btnAuto.className = 'bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 px-3 rounded shadow flex-1 text-xs transition font-mono';
+                btnStep.innerText = '单步计算';
+                btnStep.className = 'bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-3 rounded shadow flex-1 text-xs transition font-mono';
+                badge.className = 'px-2 py-0.5 rounded bg-slate-800 text-slate-500 font-mono text-xs';
+            } else if (simState === 'PLAYING') {
+                btnAuto.innerText = '暂停';
+                btnAuto.className = 'bg-amber-600 hover:bg-amber-500 text-black font-bold py-2 px-3 rounded shadow flex-1 text-xs transition font-mono';
+                btnStep.innerText = '卡在当前';
+                btnStep.className = 'bg-slate-700 text-slate-500 font-bold py-2 px-3 rounded shadow flex-1 text-xs transition font-mono cursor-not-allowed';
+                badge.className = 'px-2 py-0.5 rounded bg-sky-900/50 text-sky-400 border border-sky-700 animate-pulse font-mono text-xs';
+            } else if (simState === 'PAUSED') {
+                btnAuto.innerText = '恢复自动';
+                btnAuto.className = 'bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 px-3 rounded shadow flex-1 text-xs transition font-mono';
+                btnStep.innerText = '下一格 ⏭';
+                btnStep.className = 'bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-3 rounded shadow flex-1 text-xs transition font-mono ring-2 ring-blue-400 ring-offset-2 ring-offset-slate-900';
+                badge.className = 'px-2 py-0.5 rounded bg-amber-900/50 text-amber-400 border border-amber-700 font-mono text-xs';
+            }
+        }
+
+        async function simDelay() {
+            let currentV = simVersion;
+            if (simState === 'PLAYING') {
+                await new Promise(res => setTimeout(res, autoDelaySpeed));
+            } else if (simState === 'PAUSED') {
+                await new Promise(res => { nextStepResolve = res; });
+            }
+            if (currentV !== simVersion) throw new Error('CANCELLED');
+        }
+
+        function handleAutoPlay() {
+            if (simState === 'STOPPED') { simState = 'PLAYING'; updateBtnUI(); startSimulation(); }
+            else if (simState === 'PLAYING') { simState = 'PAUSED'; updateBtnUI(); }
+            else if (simState === 'PAUSED') {
+                simState = 'PLAYING'; updateBtnUI();
+                if (nextStepResolve) { let r = nextStepResolve; nextStepResolve = null; r(); }
+            }
+        }
+
+        function handleNextStep() {
+            if (simState === 'STOPPED') { simState = 'PAUSED'; updateBtnUI(); startSimulation(); }
+            else if (simState === 'PLAYING') { simState = 'PAUSED'; updateBtnUI(); }
+            else if (simState === 'PAUSED') {
+                if (nextStepResolve) { let r = nextStepResolve; nextStepResolve = null; r(); }
+            }
+        }
+
+        function handleReset() {
+            simState = 'STOPPED'; simVersion++;
+            if (nextStepResolve) { let r = nextStepResolve; nextStepResolve = null; r(); }
+            updateBtnUI();
+            document.getElementById('console-output').innerHTML = '';
+            document.getElementById('disp-ans').innerText = '0';
+            refreshDPTable();
+        }
+
+        const consoleOut = document.getElementById('console-output');
+        
+        function logNode(containerClass, elementsArray) {
+            const div = document.createElement('div');
+            div.className = containerClass + " mb-1 pb-1 border-b border-slate-900/60";
+            
+            elementsArray.forEach(item => {
+                const span = document.createElement('span');
+                if (item.cl) span.className = item.cl;
+                span.innerText = item.txt;
+                div.appendChild(span);
+            });
+            
+            consoleOut.appendChild(div);
+            consoleOut.scrollTop = consoleOut.scrollHeight;
+        }
+
+        function refreshDPTable() {
+            const m = parseInt(document.getElementById('sim-m').value) || 10;
+            const n = parseInt(document.getElementById('sim-n').value) || 4;
+            if(m > 15 || n > 8) {
+                document.getElementById('dp-table-container').innerHTML = '<div class="text-rose-500 p-4 border border-dashed border-rose-900 font-mono text-xs">视图范围建议限制在 M&le;15, N&le;8 以内</div>';
+                return;
+            }
+            buildDPTable(m, n);
+        }
+
+        function buildDPTable(m, n) {
+            const container = document.getElementById('dp-table-container');
+            let html = '<table class="dp-table mx-auto">';
+            
+            html += '<tr><td class="dp-idx"></td><td class="dp-idx text-slate-500 font-mono text-[10px]">物品(W,C)</td>';
+            for (let j = 0; j <= m; j++) {
+                html += `<td class="dp-cell dp-header text-center" id="h-col-${j}">j=${j}</td>`;
+            }
+            html += '</tr>';
+
+            html += '<tr><td class="dp-idx text-[10px] text-sky-500 font-mono">i=0</td><td class="dp-cell dp-header border-none opacity-40 text-[10px] bg-transparent">原始边界</td>';
+            for (let j = 0; j <= m; j++) {
+                html += `<td class="dp-cell dp-filled text-slate-600 border-slate-800" id="cell-0-${j}">0</td>`;
+            }
+            html += '</tr>';
+
+            for (let i = 1; i <= n; i++) {
+                const wi = parseInt(document.getElementById(`w-${i}`)?.value) || 0;
+                const ci = parseInt(document.getElementById(`c-${i}`)?.value) || 0;
+                
+                html += '<tr>';
+                html += `<td class="dp-idx text-[10px] text-sky-500 font-mono">i=${i}</td>`;
+                html += `<td class="dp-cell dp-header text-[11px] border-sky-950 text-slate-300" id="h-row-${i}">物品${i}(${wi},${ci})</td>`;
+                
+                for (let j = 0; j <= m; j++) {
+                    let initVal = (j === 0) ? '0' : '';
+                    let extraClass = (j === 0) ? 'dp-filled text-slate-600 border-slate-800' : '';
+                    html += `<td class="dp-cell ${extraClass}" id="cell-${i}-${j}">${initVal}</td>`;
+                }
+                html += '</tr>';
+            }
+            html += '</table>';
+            container.innerHTML = html;
+        }
+
+        function clearHighlights(m, n) {
+            for(let i=0; i<=n; i++){
+                for(let j=0; j<=m; j++){
+                    let cell = document.getElementById(`cell-${i}-${j}`);
+                    if(cell) cell.classList.remove('dp-active-target', 'dp-source-skip', 'dp-source-take');
+                }
+            }
+            for(let i=1; i<=n; i++) document.getElementById(`h-row-${i}`)?.classList.remove('header-active-row');
+            for(let j=0; j<=m; j++) document.getElementById(`h-col-${j}`)?.classList.remove('header-active-col');
+        }
+
+        async function startSimulation() {
+            simVersion++;
+            let curV = simVersion;
+            consoleOut.innerHTML = '';
+            document.getElementById('disp-ans').innerText = '0';
+
+            const m = parseInt(document.getElementById('sim-m').value);
+            const n = parseInt(document.getElementById('sim-n').value);
+            
+            let w = [0], c = [0];
+            for(let i=1; i<=n; i++) {
+                w.push(parseInt(document.getElementById(`w-${i}`).value) || 0);
+                c.push(parseInt(document.getElementById(`c-${i}`).value) || 0);
+            }
+
+            simState = document.getElementById('btn-auto').innerText === '自动推演' ? 'PAUSED' : 'PLAYING';
+            updateBtnUI();
+
+            logNode('text-sky-500 font-bold', [{txt: "[系统] dp[35][205] 决策数组挂载成功。边界安全激活。"}]);
+
+            let dp = Array.from({length: n+1}, () => Array(m+1).fill(0));
+
+            for(let i=1; i<=n; i++) {
+                for(let j=1; j<=m; j++) {
+                    clearHighlights(m, n);
+
+                    document.getElementById(`h-row-${i}`).classList.add('header-active-row');
+                    document.getElementById(`h-col-${j}`).classList.add('header-active-col');
+                    let targetCell = document.getElementById(`cell-${i}-${j}`);
+                    targetCell.classList.add('dp-active-target');
+
+                    if (j < w[i]) {
+                        dp[i][j] = dp[i-1][j];
+                        document.getElementById(`cell-${i-1}-${j}`).classList.add('dp-source-skip');
+                        
+                        logNode('text-amber-300', [
+                            { txt: `> dp[${i}][${j}] : ` },
+                            { txt: "容量不足 ", cl: "font-semibold text-slate-300" },
+                            { txt: `(当前背包容量 j=${j} 小于 物品重量 W=${w[i]}) `, cl: "text-amber-400 font-bold" },
+                            { txt: "无法放入物品。选择放弃当前物品，直接继承上一行同列的最优解: " },
+                            { txt: `dp[${i-1}][${j}] = ${dp[i][j]}`, cl: "text-white font-bold bg-amber-950/50 px-1 rounded border border-amber-800" }
+                        ]);
+                    } else {
+                        let noTake = dp[i-1][j];
+                        let take = dp[i-1][j - w[i]] + c[i];
+                        dp[i][j] = Math.max(noTake, take);
+
+                        document.getElementById(`cell-${i-1}-${j}`).classList.add('dp-source-skip');
+                        document.getElementById(`cell-${i-1}-${j - w[i]}`).classList.add('dp-source-take');
+                        
+                        logNode('text-emerald-300', [
+                            { txt: `> dp[${i}][${j}] : ` },
+                            { txt: "空间充裕 ", cl: "font-semibold text-slate-300" },
+                            { txt: `(当前背包容量 j=${j} 能够承受 物品重量 W=${w[i]}) `, cl: "text-emerald-400 font-bold" },
+                            { txt: "触发动态抉择：\n  " },
+                            { txt: `[情况1] 放弃该物品价值 = ${noTake} ; `, cl: "text-amber-400" },
+                            { txt: `[情况2] 放入该物品价值 (dp[${i-1}][${j-w[i]}]+${c[i]}) = ${take} ; `, cl: "text-emerald-400" },
+                            { txt: "取最大值 max = " },
+                            { txt: `${dp[i][j]}`, cl: "text-white font-bold bg-emerald-950 px-1.5 rounded border border-emerald-800 text-sm" }
+                        ]);
+                    }
+
+                    targetCell.innerText = dp[i][j];
+                    await simDelay();
+
+                    targetCell.classList.remove('dp-active-target');
+                    targetCell.classList.add('dp-filled');
+                }
+            }
+
+            if(curV === simVersion) {
+                clearHighlights(m, n);
+                simState = 'STOPPED';
+                updateBtnUI();
+                document.getElementById('disp-ans').innerText = dp[n][m];
+                
+                let finalCell = document.getElementById(`cell-${n}-${m}`);
+                finalCell.classList.remove('dp-filled');
+                finalCell.classList.add('dp-active-target');
+
+                logNode('text-sky-500 font-bold', [
+                    { txt: "========================================\n" },
+                    { txt: "[系统] 二维推演结束。矩阵右下角最终最优解锁定。\n" },
+                    { txt: `背包可容纳的最大总价值 = ${dp[n][m]}`, cl: "text-white text-base bg-emerald-600 px-3 py-0.5 rounded shadow" }
+                ]);
+            }
+        }
+    </script>
+</body>
+</html>
